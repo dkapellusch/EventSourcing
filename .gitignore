@@ -16,6 +16,7 @@
 .bashrc
 dist/
 */**/published/
+*/**/*.db/
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
 
