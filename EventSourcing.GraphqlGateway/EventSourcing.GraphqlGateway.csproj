@@ -26,4 +26,12 @@
     <ItemGroup>
       <ProjectReference Include="..\EventSourcing.Contracts\EventSourcing.Contracts.csproj" />
     </ItemGroup>
+
+    <ItemGroup>
+      <_ContentIncludedByDefault Remove="published\web.config" />
+      <_ContentIncludedByDefault Remove="published\appsettings.json" />
+      <_ContentIncludedByDefault Remove="published\appsettings.local.json" />
+      <_ContentIncludedByDefault Remove="published\EventSourcing.GraphqlGateway.deps.json" />
+      <_ContentIncludedByDefault Remove="published\EventSourcing.GraphqlGateway.runtimeconfig.json" />
+    </ItemGroup>
 </Project>

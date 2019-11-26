@@ -6,11 +6,11 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Grpc.AspNetCore.Server" Version="2.23.2"/>
-        <PackageReference Include="Google.Protobuf" Version="3.10.0"/>
-        <PackageReference Include="Grpc.Core" Version="2.24.0"/>
-        <PackageReference Include="Grpc.Reflection" Version="2.24.0"/>
-        <PackageReference Include="Grpc.Tools" Version="2.24.0" PrivateAssets="All"/>
+        <PackageReference Include="Grpc.AspNetCore.Server" Version="2.23.2" />
+        <PackageReference Include="Google.Protobuf" Version="3.10.0" />
+        <PackageReference Include="Grpc.Core" Version="2.24.0" />
+        <PackageReference Include="Grpc.Reflection" Version="2.24.0" />
+        <PackageReference Include="Grpc.Tools" Version="2.24.0" PrivateAssets="All" />
     </ItemGroup>
 
     <ItemGroup>
@@ -23,8 +23,8 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\EventSourcing.Contracts\EventSourcing.Contracts.csproj"/>
-        <ProjectReference Include="..\EventSourcing.Kafka\EventSourcing.Kafka.csproj"/>
+        <ProjectReference Include="..\EventSourcing.Contracts\EventSourcing.Contracts.csproj" />
+        <ProjectReference Include="..\EventSourcing.Kafka\EventSourcing.Kafka.csproj" />
     </ItemGroup>
 
 </Project>
