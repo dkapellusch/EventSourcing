@@ -25,6 +25,8 @@ namespace EventSourcing.GraphqlGateway.Graphql.Vehicle
         }
 
         private IObservable<Contracts.Vehicle> GetVehicleChangeSubscription(ResolveEventStreamContext context) =>
-            _vehicleReadClient.GetVehicleUpdates(new Empty()).ResponseStream.AsObservable();
+            _vehicleReadClient.GetVehicleUpdates(new Empty())
+                .ResponseStream
+                .AsObservable();
     }
 }

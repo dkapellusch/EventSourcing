@@ -29,8 +29,8 @@ namespace EventSourcing.GraphqlGateway
             WebHost.CreateDefaultBuilder(args)
                 .UseConfiguration(Configuration)
                 .ConfigureServices(services => services
-                    .AddLogging()
                     .AddGrpcClients(Configuration)
+                    .AddLogging()
                     .AddResolvers()
                     .AddGraphqlTypes()
                     .AddHttpContextAccessor()

@@ -37,7 +37,6 @@ namespace EventSourcing.GraphqlGateway
                 .AddSingleton<Schema>();
         }
 
-
         public static IServiceCollection AddGrpcClients(this IServiceCollection services, IConfiguration configuration) =>
             services
                 .AddSingleton(new VehicleReadClient(new Channel(configuration.GetValue<string>("vehicleRead:host"), ChannelCredentials.Insecure)))

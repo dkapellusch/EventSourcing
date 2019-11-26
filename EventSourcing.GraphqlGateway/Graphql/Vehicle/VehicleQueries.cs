@@ -18,7 +18,7 @@ namespace EventSourcing.GraphqlGateway.Graphql.Vehicle
             );
 
             FieldAsync<ListGraphType<VehicleType>>("vehiclesByPartialVin",
-                "vehicles with partial vin",
+                "vehicles with partial vin match",
                 new QueryArguments(new QueryArgument(typeof(StringGraphType)) {Name = "vin"}),
                 async ctx => await ctx.TryAsyncResolve(async context =>
                 {
