@@ -1,0 +1,145 @@
+version: '3'
+services:
+  DDZookeeper:
+    image: "confluentinc/cp-zookeeper:latest"
+    ports:
+      - "32181:32181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 32181
+    restart: always
+    networks:
+      - "dd-net"
+
+  DDKafka:
+    image: "confluentinc/cp-kafka:latest"
+    ports:
+      - "39092:39092"
+    environment:
+      KAFKA_ZOOKEEPER_CONNECT: "DDZookeeper:32181"
+      KAFKA_ADVERTISED_LISTENERS: "PLAINTEXT://DDKafka:39093,PLAINTEXT_HOST://localhost:39092"
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT"
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_BROKER_ID: 1
+    restart: always
+    depends_on:
+      - "DDZookeeper"
+    networks:
+      - "dd-net"
+
+  KSQL:
+    image: "confluentinc/cp-ksql-server:latest"
+    ports:
+      - "8088:8088"
+      - "8089:8089"
+    environment:
+      KSQL_BOOTSTRAP_SERVERS: "DDKafka:39093"
+      KSQL_LISTENERS: "http://0.0.0.0:8088/,https://0.0.0.0:8089/"
+    restart: always
+    depends_on:
+      - "DDKafka"
+    networks:
+      - "dd-net"
+
+  DDKafka2:
+    image: "confluentinc/cp-kafka:latest"
+    ports:
+      - "49092:49092"
+    environment:
+      KAFKA_ZOOKEEPER_CONNECT: "DDZookeeper:32181"
+      KAFKA_ADVERTISED_LISTENERS: "PLAINTEXT://DDKafka2:39093,PLAINTEXT_HOST://localhost:49092"
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT"
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_BROKER_ID: 2
+    restart: always
+    depends_on:
+      - "DDZookeeper"
+    networks:
+      - "dd-net"
+
+  LocationReadService:
+    image: "eventsourcing.locationreadservice"
+    ports:
+      - "6001:6001"
+    restart: always
+    depends_on:
+      - "DDZookeeper"
+      - "DDKafka"
+      - "DDKafka2"
+    networks:
+      - "dd-net" 
+
+  LocationWriteService:
+    image: "eventsourcing.locationwriteservice"
+    ports:
+      - "6000:6000"
+    restart: always
+    depends_on:
+      - "DDZookeeper"
+      - "DDKafka"
+      - "DDKafka2"
+    networks:
+      - "dd-net" 
+
+  VehicleReadService:
+    image: "eventsourcing.vehiclereadservice"
+    ports:
+      - "5001:5001"
+    restart: always
+    depends_on:
+      - "DDZookeeper"
+      - "DDKafka"
+      - "DDKafka2"
+    networks:
+      - "dd-net" 
+
+  VehicleWriteService:
+    image: "eventsourcing.vehiclewriteservice"
+    ports:
+      - "5000:5000"
+    restart: always
+    depends_on:
+      - "DDZookeeper"
+      - "DDKafka"
+      - "DDKafka2"
+    networks:
+      - "dd-net" 
+  
+  Graphql:
+    image: "eventsourcing.graphql"
+    ports:
+      - "8001:8001"
+    restart: always
+    depends_on:
+      - "LocationReadService"
+      - "LocationWriteService"
+      - "VehicleReadService"
+      - "VehicleWriteService"
+    networks:
+      - "dd-net"
+networks:
+  dd-net:
+
+  #  docker run --net=host -it confluentinc/cp-ksql-cli http://0.0.0.0:8088
+  #  CREATE STREAM vehicles (vin string, make string, model string,  year int, currentLocationId int) WITH (KAFKA_TOPIC='Vehicles', VALUE_FORMAT='JSON');
+  #  CREATE STREAM vStream (vin string, make string, model string,  locationCode string) WITH (KAFKA_TOPIC='Vehicles', VALUE_FORMAT='JSON');
+  #  CREATE table vTab (vin string, make string, model string,  locationCode string) WITH (KAFKA_TOPIC='Vehicles', VALUE_FORMAT='JSON', key='vin');
+  #  CREATE table locationTable (locationCode string, locationName string) WITH (KAFKA_TOPIC='Vehicles', VALUE_FORMAT='JSON', key='locationCode');
+  #  CREATE table v (vin string, make string, model string,  locationCode string) WITH (KAFKA_TOPIC='Vehicles', VALUE_FORMAT='JSON', key='vin');
+  #  CREATE Table vehicles (vin string, make string, model string,  locationCode string) WITH (KAFKA_TOPIC='Vehicles', VALUE_FORMAT='JSON', key='vin');
+  #  CREATE STREAM locations (locationId int, LocationName string) WITH (KAFKA_TOPIC='Locations', VALUE_FORMAT='JSON');
+  #  CREATE STREAM vehicles_at_location AS SELECT v.vin, v.currentLocationId, l.locationId, l.locationName FROM vehicles v LEFT JOIN locations l WITHIN 1 HOURS  ON v.currentLocationId = l.locationId ;
+#
+#  create table vehicles_per_minute as select Vin , Make , Model , LocationCode from vehicles WINDOW TUMBLING (SIZE 1 MINUTE) group by vin
+#
+#  (Vin string, Make string, Model string, LocationCode string) with (kafka_topic='Vehicles', value_format='json', key='Vin');
+#  CREATE TABLE pageviews_per_region_per_minute AS
+#  SELECT regionid,
+#  count(*)
+#  FROM pageviews_enriched
+#  WINDOW TUMBLING (SIZE 1 MINUTE)
+#  GROUP BY regioni
+#  CREATE TABLE vtab as SELECT vin, make, model, locationCode FROM vehicles;
+#  CREATE STREAM vehicles (vin string, make string, model string, locationCode string) WITH (KAFKA_TOPIC='Vehicles', VALUE_FORMAT='JSON');
+#  CREATE STREAM vehicles_at_location AS SELECT vin , make , model , v.locationCode, l.LocationName FROM vehicles v LEFT JOIN locations l WITHIN 1 HOURS  ON v.locationCode = l.locationCode ;
