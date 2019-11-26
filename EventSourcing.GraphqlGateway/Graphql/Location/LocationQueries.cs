@@ -11,23 +11,23 @@ namespace EventSourcing.GraphqlGateway.Graphql.Location
             FieldAsync<LocationType>("location",
                 "a location",
                 new QueryArguments(new QueryArgument(typeof(StringGraphType)) {Name = "code"}),
-                async ctx =>
+                async ctx => await ctx.TryAsyncResolve(async context =>
                     await locationReadClient.GetLocationAsync(
                         new LocationRequest
                         {
                             LocationCode = ctx.Arguments["code"].ToString()
                         }
                     )
-            );
+                ));
 
             FieldAsync<ListGraphType<LocationType>>("locations",
                 "all locations",
                 null,
-                async ctx =>
+                async ctx => await ctx.TryAsyncResolve(async context =>
                 {
                     var response = await locationReadClient.GetAllLocationsAsync(new Empty());
                     return response.Elements;
-                });
+                }));
         }
     }
 }

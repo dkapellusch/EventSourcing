@@ -13,25 +13,27 @@ namespace EventSourcing.GraphqlGateway.Graphql.Vehicle
             FieldAsync<VehicleType>("vehicle",
                 "a vehicle",
                 new QueryArguments(new QueryArgument(typeof(StringGraphType)) {Name = "vin"}),
-                async ctx => await vehicleReadClient.GetVehicleAsync(new VehicleRequest {Vin = ctx.Arguments["vin"].ToString()}));
+                async ctx => await ctx.TryAsyncResolve(async context =>
+                    await vehicleReadClient.GetVehicleAsync(new VehicleRequest {Vin = ctx.Arguments["vin"].ToString()}))
+            );
 
             FieldAsync<ListGraphType<VehicleType>>("vehiclesByPartialVin",
                 "vehicles with partial vin",
                 new QueryArguments(new QueryArgument(typeof(StringGraphType)) {Name = "vin"}),
-                async ctx =>
+                async ctx => await ctx.TryAsyncResolve(async context =>
                 {
                     var vehicles = await vehicleReadClient.GetVehiclesByPartialVinAsync(new VehicleRequest {Vin = ctx.Arguments["vin"].ToString()});
                     return vehicles.Elements;
-                });
+                }));
 
             FieldAsync<ListGraphType<VehicleType>>("vehicles",
                 "all vehicles",
                 null,
-                async ctx =>
+                async ctx => await ctx.TryAsyncResolve(async context =>
                 {
                     var response = await vehicleReadClient.GetAllVehiclesAsync(new Empty());
                     return response.Elements;
-                });
+                }));
         }
     }
 }

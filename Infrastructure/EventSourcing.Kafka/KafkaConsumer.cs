@@ -20,7 +20,6 @@ namespace EventSourcing.Kafka
             _consumer = new ConsumerBuilder<string, TPayload>(config)
                 .SetValueDeserializer(new KafkaSerializer<TPayload>(serializer))
                 .Build();
-            SeekToOffset(0);
         }
 
         public IObservable<ConsumeResult<string, TPayload>> Subscription { get; private set; }
