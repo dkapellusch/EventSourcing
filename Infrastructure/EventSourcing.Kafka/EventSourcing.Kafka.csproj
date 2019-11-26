@@ -19,7 +19,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\EventSourcing.Contracts\EventSourcing.Contracts.csproj" />
+      <ProjectReference Include="..\..\EventSourcing.Contracts\EventSourcing.Contracts.csproj" />
       <ProjectReference Include="..\EventSourcing.RocksDb\EventSourcing.RocksDb.csproj" />
     </ItemGroup>
 

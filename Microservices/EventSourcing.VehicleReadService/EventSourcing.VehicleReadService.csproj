@@ -20,10 +20,11 @@
         <Content Update="appsettings.local.json">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
-
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\EventSourcing.Kafka\EventSourcing.Kafka.csproj" />
+        <ProjectReference Include="..\..\EventSourcing.Contracts\EventSourcing.Contracts.csproj" />
+        <ProjectReference Include="..\..\Infrastructure\EventSourcing.Kafka\EventSourcing.Kafka.csproj" />
     </ItemGroup>
+
 </Project>
