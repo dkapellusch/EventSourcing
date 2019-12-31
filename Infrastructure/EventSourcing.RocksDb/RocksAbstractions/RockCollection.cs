@@ -4,20 +4,21 @@ using System.Globalization;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using EventSourcing.Contracts;
 using EventSourcing.RocksDb.Extensions;
 using EventSourcing.RocksDb.Serialization;
 using RocksDbSharp;
 
 namespace EventSourcing.RocksDb.RocksAbstractions
 {
-    public class RocksStore
+    public class RockCollection
     {
         private readonly RocksDatabase _db;
         private readonly ISerializer _serializer;
         private readonly Subject<object> _subject;
         private IObservable<object> _stream;
 
-        public RocksStore(RocksDatabase db, ISerializer serializer)
+        public RockCollection(RocksDatabase db, ISerializer serializer)
         {
             _db = db;
             _serializer = serializer;
@@ -86,8 +87,6 @@ namespace EventSourcing.RocksDb.RocksAbstractions
                 .GetEnumerable()
                 .Select(kv => (_serializer.Deserialize<TKey>(kv.key), _serializer.Deserialize<TValue>(kv.value)));
         }
-
-        public Iterator GetIterator<TValue>(ReadOptions options = null) => RocksDb.NewIterator(GetColumnFamily<TValue>(), options ?? new ReadOptions());
 
         private void WriteToAuditLog<TKey, TValue>(DataChangedEvent<TKey, TValue> dataChangedEvent) =>
             RocksDb.Put(DateTime.UtcNow.ToString(CultureInfo.InvariantCulture), _serializer.Serialize(dataChangedEvent), GetAuditColumnFamily<TValue>());

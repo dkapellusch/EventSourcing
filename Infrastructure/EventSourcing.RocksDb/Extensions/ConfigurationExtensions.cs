@@ -8,7 +8,7 @@ namespace EventSourcing.RocksDb.Extensions
     {
         public static IServiceCollection AddRocksDb(this IServiceCollection services, string pathToDb) =>
             services.AddSingleton(new RocksDatabase(pathToDb))
-                .AddSingleton<RocksStore>()
+                .AddSingleton<RockCollection>()
                 .AddSingleton<ISerializer, JsonSerializer>()
                 .AddSingleton(typeof(ISerializer<>), typeof(JsonSerializer<>));
     }

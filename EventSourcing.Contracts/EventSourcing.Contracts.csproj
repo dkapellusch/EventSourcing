@@ -8,7 +8,9 @@
     <ItemGroup>
         <Protobuf Include="Protos\*.proto" ProtoRoot="Protos" GrpcServices="Both" />
     </ItemGroup>
-
+    <PropertyGroup>
+        <PublishWithAspNetCoreTargetManifest>false</PublishWithAspNetCoreTargetManifest>
+    </PropertyGroup>
     <ItemGroup>
         <PackageReference Include="FluentValidation" Version="8.5.1" />
         <PackageReference Include="Google.Protobuf" Version="3.10.0" />

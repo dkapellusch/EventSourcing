@@ -10,11 +10,11 @@ namespace EventSourcing.Kafka
 {
     public class KafkaBackedDb<TValue> where TValue : IMessage<TValue>
     {
-        private readonly RocksStore _rocksStore;
+        private readonly RockCollection _rockCollection;
 
-        public KafkaBackedDb(RocksStore rocksStore, KafkaConsumer<TValue> kafkaConsumer)
+        public KafkaBackedDb(RockCollection rockCollection, KafkaConsumer<TValue> kafkaConsumer)
         {
-            _rocksStore = rocksStore;
+            _rockCollection = rockCollection;
 
             kafkaConsumer.Start();
             kafkaConsumer.Subscription
@@ -23,22 +23,22 @@ namespace EventSourcing.Kafka
                 .Subscribe(m =>
                 {
                     var value = m.Value;
-                    var currentValue = _rocksStore.Get<string, TValue>(m.Key);
+                    var currentValue = _rockCollection.Get<string, TValue>(m.Key);
 
                     if (!(currentValue is null))
                         value.UpdateObject(currentValue);
 
-                    _rocksStore.Add(m.Key, value);
+                    _rockCollection.Add(m.Key, value);
                     kafkaConsumer.Commit(m.Partition, m.Offset);
                 });
         }
 
-        public TValue GetItem(string key) => _rocksStore.Get<string, TValue>(key);
+        public TValue GetItem(string key) => _rockCollection.Get<string, TValue>(key);
 
-        public IEnumerable<TValue> GetAll() => _rocksStore.GetItems<string, TValue>().Select(pair => pair.value);
+        public IEnumerable<TValue> GetAll() => _rockCollection.GetItems<string, TValue>().Select(pair => pair.value);
 
-        public IEnumerable<TValue> GetItems(string key) => _rocksStore.GetItems<string, TValue>(key, (k, _) => k.Contains(key)).Select(kv => kv.value);
+        public IEnumerable<TValue> GetItems(string key) => _rockCollection.GetItems<string, TValue>(key, (k, _) => k.Contains(key)).Select(kv => kv.value);
 
-        public IObservable<TValue> GetChanges() => _rocksStore.ChangedDataCaptureStream.OfType<DataChangedEvent<string, TValue>>().Select(dc => dc.Data.value);
+        public IObservable<TValue> GetChanges() => _rockCollection.ChangedDataCaptureStream.OfType<DataChangedEvent<string, TValue>>().Select(dc => dc.Data.value);
     }
 }
