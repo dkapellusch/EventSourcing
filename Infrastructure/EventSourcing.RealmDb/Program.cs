@@ -9,14 +9,7 @@ namespace EventSourcing.RealmDb
 {
     public class VehicleEntity : RealmObject, IEntity
     {
-        public VehicleEntity(string vin, string model, string make)
-        {
-            Vin = vin;
-            Model = model;
-            Make = make;
-        }
-
-        public IDataStore DataStore { get; set; }
+        [Ignored] public IDataStore DataStore { get; set; }
 
         public string PrimaryKey
         {
@@ -25,8 +18,8 @@ namespace EventSourcing.RealmDb
         }
 
         public bool Attached { get; set; }
+        public string Vin { get; set; }
 
-        public string Vin { get; private set; }
         public string Model { get; set; }
         public string Make { get; set; }
     }
@@ -36,7 +29,7 @@ namespace EventSourcing.RealmDb
         public static void Main()
         {
             var rock = new RocksStore(new RocksDatabase("./rockOrm.db"), new NewtonJsonSerializer());
-            var v = new VehicleEntity("123456", "Camry", "Toyota");
+            var v = new VehicleEntity {Vin = "123456", Make = "Camry", Model = "Toyota"};
 
             rock.Save(v);
             Console.WriteLine(rock.Get<VehicleEntity>("123456").Make);
