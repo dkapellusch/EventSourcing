@@ -8,10 +8,7 @@ namespace EventSourcing.RocksDb.Serialization
     {
         private readonly JsonSerializerOptions _settings;
 
-        public JsonSerializer()
-        {
-            _settings = new JsonSerializerOptions {ReadCommentHandling = JsonCommentHandling.Allow, IgnoreNullValues = true, PropertyNameCaseInsensitive = true};
-        }
+        public JsonSerializer() => _settings = new JsonSerializerOptions {ReadCommentHandling = JsonCommentHandling.Allow, IgnoreNullValues = true, PropertyNameCaseInsensitive = true};
 
         public T Deserialize(byte[] serializedData) => System.Text.Json.JsonSerializer.Deserialize<T>(serializedData, _settings);
 
@@ -30,10 +27,7 @@ namespace EventSourcing.RocksDb.Serialization
     {
         private readonly JsonSerializerOptions _settings;
 
-        public JsonSerializer()
-        {
-            _settings = new JsonSerializerOptions {IgnoreNullValues = true, PropertyNameCaseInsensitive = true};
-        }
+        public JsonSerializer() => _settings = new JsonSerializerOptions {IgnoreNullValues = true, PropertyNameCaseInsensitive = true};
 
         public T Deserialize<T>(byte[] serializedData) => serializedData is null ? default : System.Text.Json.JsonSerializer.Deserialize<T>(serializedData, _settings);
 

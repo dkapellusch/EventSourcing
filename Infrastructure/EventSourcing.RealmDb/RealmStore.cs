@@ -1,28 +1,38 @@
+using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
+using EventSourcing.Contracts;
 using Realms;
 
 namespace EventSourcing.RealmDb
 {
-    public class RealmStore 
+    public class RealmStore : IDataStore
     {
         private readonly Realm _realm;
 
         public RealmStore() => _realm = Realm.GetInstance(new RealmConfiguration("./realm.db") {SchemaVersion = 5u});
 
-        public async Task AddAsync<T>(T item) where T : RealmObject => await _realm.WriteAsync(r => r.Add(item));
+        public void Save<T>(T entity) where T : class, IEntity
+        {
+            if (entity is RealmObject realmEntity)
+                _realm.Write(() => _realm.Add(realmEntity));
+        }
 
-        public async Task AddAsync(params RealmObject[] items) =>
-            await _realm.WriteAsync(r =>
+        public T Get<T>(string primaryKey) where T : class, IEntity
+        {
+            var entity = _realm.Find(typeof(T).Name, primaryKey);
+            return entity as T;
+        }
+
+        public void Delete<T>(string primaryKey) where T : class, IEntity
+        {
+            _realm.Write(() =>
             {
-                foreach (var item in items)
-                    r.Add(item);
+                var entity = Get<T>(primaryKey);
+                if (entity is RealmObject realmEntity)
+                    _realm.Remove(realmEntity);
             });
+        }
 
-        public void Delete(RealmObject item) => _realm.Remove(item);
-
-        public void Delete<T>(string primaryKey) where T : RealmObject => _realm.Remove(Query<T>(primaryKey));
-        public IQueryable<T> Query<T>() where T : RealmObject => _realm.All<T>();
-        public T Query<T>(string primaryKey) where T : RealmObject => _realm.Find<T>(primaryKey);
+        public IEnumerable<T> Query<T>() where T : class, IEntity => _realm.All<RealmObject>().Select(o => o as T).Where(o => o != null);
     }
 }
