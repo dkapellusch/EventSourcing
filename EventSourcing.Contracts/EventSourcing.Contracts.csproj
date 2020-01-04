@@ -3,6 +3,7 @@
     <PropertyGroup>
         <TargetFramework>netcoreapp3.0</TargetFramework>
         <RootNamespace>EventSourcing.Contracts</RootNamespace>
+        <LangVersion>latestmajor</LangVersion>
     </PropertyGroup>
 
     <ItemGroup>
@@ -17,7 +18,6 @@
         <PackageReference Include="Grpc.Core" Version="2.24.0" />
         <PackageReference Include="Grpc.Reflection" Version="2.24.0" />
         <PackageReference Include="Grpc.Tools" Version="2.24.0" PrivateAssets="All" />
-        <PackageReference Include="Realm" Version="4.2.0" />
         <PackageReference Include="System.Reactive.Linq" Version="4.2.0" />
         <PackageReference Include="System.Reactive" Version="4.2.0" />
     </ItemGroup>

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using EventSourcing.Contracts;
@@ -9,18 +10,25 @@ namespace EventSourcing.RealmDb
     {
         private readonly Realm _realm;
 
-        public RealmStore() => _realm = Realm.GetInstance(new RealmConfiguration("./realm.db") {SchemaVersion = 5u});
+        public RealmStore() => _realm = Realm.GetInstance(new RealmConfiguration("./realm.db") {SchemaVersion = 1, ShouldDeleteIfMigrationNeeded = true});
 
-        public void Save<T>(T entity) where T : class, IEntity
+
+        public void Save<T>(Func<T> transaction) where T : class, IEntity
         {
-            if (entity is RealmObject realmEntity)
-                _realm.Write(() => _realm.Add(realmEntity));
+            _realm.Write(() =>
+            {
+                if (transaction() is RealmObject realmEntity)
+                    _realm.Add(realmEntity);
+            });
         }
 
         public T Get<T>(string primaryKey) where T : class, IEntity
         {
             var entity = _realm.Find(typeof(T).Name, primaryKey);
-            return entity as T;
+
+            var e = entity as T;
+            if (e != null) e.DataStore = this;
+            return e;
         }
 
         public void Delete<T>(string primaryKey) where T : class, IEntity
@@ -34,5 +42,7 @@ namespace EventSourcing.RealmDb
         }
 
         public IEnumerable<T> Query<T>() where T : class, IEntity => _realm.All<RealmObject>().Select(o => o as T).Where(o => o != null);
+
+        public IEnumerable<T> Query<T>(string startingKey) where T : class, IEntity => Query<T>().Where(e => e.PrimaryKey.Contains(startingKey));
     }
 }

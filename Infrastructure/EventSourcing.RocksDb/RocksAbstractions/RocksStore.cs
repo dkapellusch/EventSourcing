@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -21,18 +22,27 @@ namespace EventSourcing.RocksDb.RocksAbstractions
 
         private RocksDbSharp.RocksDb RocksDb => _db.RocksDb;
 
-        public void Save<T>(T entity) where T : class, IEntity => RocksDb.Put(entity.PrimaryKey, _serializer.Serialize(entity), GetColumnFamily<T>());
+        public void Save<T>(Func<T> transaction) where T : class, IEntity
+        {
+            var entity = transaction();
+            RocksDb.Put(entity.PrimaryKey, _serializer.Serialize(entity), GetColumnFamily<T>());
+            entity.DataStore = this;
+        }
 
         public void Delete<T>(string primaryKey) where T : class, IEntity => RocksDb.Remove(primaryKey, GetColumnFamily<T>());
 
-        public T Get<T>(string primaryKey) where T :  class, IEntity
+        public T Get<T>(string primaryKey) where T : class, IEntity
         {
-            var entity = _serializer.Deserialize<T>(RocksDb.Get(Encoding.UTF8.GetBytes(primaryKey), GetColumnFamily<T>()));
-            entity.Attach(this);
+            var savedEntity = RocksDb.Get(Encoding.UTF8.GetBytes(primaryKey), GetColumnFamily<T>());
+            if (savedEntity is null)
+                return null;
+
+            var entity = _serializer.Deserialize<T>(savedEntity);
+            entity.DataStore = this;
             return entity;
         }
 
-        public IEnumerable<T> Query<T>() where T :  class, IEntity
+        public IEnumerable<T> Query<T>() where T : class, IEntity
         {
             var iteratorOptions = new ReadOptions();
 
@@ -43,7 +53,7 @@ namespace EventSourcing.RocksDb.RocksAbstractions
                 .Select(kv =>
                 {
                     var entity = _serializer.Deserialize<T>(kv.value);
-                    entity.Attach(this);
+                    entity.DataStore = this;
                     return entity;
                 });
         }
@@ -59,7 +69,7 @@ namespace EventSourcing.RocksDb.RocksAbstractions
                 .Select(kv =>
                 {
                     var entity = _serializer.Deserialize<T>(kv.value);
-                    entity.Attach(this);
+                    entity.DataStore = this;
                     return entity;
                 });
         }
