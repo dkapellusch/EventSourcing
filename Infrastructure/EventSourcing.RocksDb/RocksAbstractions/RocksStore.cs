@@ -25,7 +25,7 @@ namespace EventSourcing.RocksDb.RocksAbstractions
         public void Save<T>(Func<T> transaction) where T : class, IEntity
         {
             var entity = transaction();
-            RocksDb.Put(entity.PrimaryKey, _serializer.Serialize(entity), GetColumnFamily<T>());
+            RocksDb.Put(_serializer.Serialize(entity.PrimaryKey), _serializer.Serialize(entity), GetColumnFamily<T>());
             entity.DataStore = this;
         }
 
