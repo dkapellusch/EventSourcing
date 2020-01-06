@@ -28,13 +28,14 @@ services:
       - "dd-net"
 
   KSQL:
-    image: "confluentinc/cp-ksql-server:latest"
+    image: "confluentinc/ksqldb-server:latest"
     ports:
       - "8088:8088"
       - "8089:8089"
     environment:
       KSQL_BOOTSTRAP_SERVERS: "DDKafka:39093"
       KSQL_LISTENERS: "http://0.0.0.0:8088/,https://0.0.0.0:8089/"
+      KSQL_OPTS: "-Dksql.service.id=ksql_service_3_  -Dlisteners=http://0.0.0.0:8088/"
     restart: always
     depends_on:
       - "DDKafka"

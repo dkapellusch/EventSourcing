@@ -32,9 +32,8 @@ namespace EventSourcing.KSQL
             _ = ConsumeAsync(token);
         }
 
-        private Task ConsumeAsync(CancellationToken token)
-        {
-            return Task.Run(async () =>
+        private Task ConsumeAsync(CancellationToken token) =>
+            Task.Run(async () =>
                 {
                     await foreach (var row in _queryExecutor.ExecuteQuery(_query, _mapper).WithCancellation(token))
                     {
@@ -42,6 +41,5 @@ namespace EventSourcing.KSQL
                     }
                 },
                 token);
-        }
     }
 }

@@ -2,7 +2,7 @@ using System.Text;
 using System.Text.Json;
 using Newtonsoft.Json;
 
-namespace EventSourcing.RocksDb.Serialization
+namespace EventSourcing.Contracts.Serialization
 {
     public sealed class JsonSerializer<T> : ISerializer<T>
     {
@@ -17,7 +17,6 @@ namespace EventSourcing.RocksDb.Serialization
 
     public sealed class NewtonJsonSerializer : ISerializer
     {
-
         public T Deserialize<T>(byte[] serializedData) => JsonConvert.DeserializeObject<T>(Encoding.UTF8.GetString(serializedData));
 
         public byte[] Serialize<T>(T dataToSerialize) => Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(dataToSerialize));

@@ -1,8 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reactive.Linq;
+using System.Reactive.Subjects;
 using EventSourcing.Contracts;
 using Realms;
+using Realms.Sync;
 
 namespace EventSourcing.RealmDb
 {
@@ -10,28 +13,28 @@ namespace EventSourcing.RealmDb
     {
         private readonly Realm _realm;
 
-        public RealmStore() => _realm = Realm.GetInstance(new RealmConfiguration("./realm.db") {SchemaVersion = 1, ShouldDeleteIfMigrationNeeded = true});
-
-
-        public void Save<T>(Func<T> transaction) where T : class, IEntity
+        public RealmStore()
         {
-            _realm.Write(() =>
+            _realm = Realm.GetInstance(new RealmConfiguration("./realm.db") {SchemaVersion = 1, ShouldDeleteIfMigrationNeeded = true});
+        }
+
+        public void Save<T>(Func<T> transaction, string primaryKey) where T : class
+        {
+            _realm.Write(action: () =>
             {
-                if (transaction() is RealmObject realmEntity)
-                    _realm.Add(realmEntity);
+                var e = transaction();
+                if (e is RealmObject r) _realm.Add(r);
             });
         }
 
-        public T Get<T>(string primaryKey) where T : class, IEntity
+        public T Get<T>(string primaryKey) where T : class
         {
             var entity = _realm.Find(typeof(T).Name, primaryKey);
-
             var e = entity as T;
-            if (e != null) e.DataStore = this;
             return e;
         }
 
-        public void Delete<T>(string primaryKey) where T : class, IEntity
+        public void Delete<T>(string primaryKey) where T : class
         {
             _realm.Write(() =>
             {
@@ -41,8 +44,13 @@ namespace EventSourcing.RealmDb
             });
         }
 
-        public IEnumerable<T> Query<T>() where T : class, IEntity => _realm.All<RealmObject>().Select(o => o as T).Where(o => o != null);
+        public IEnumerable<T> Query<T>() where T : class => _realm.All(typeof(T).Name).Select(o => o as T).Where(o => o != null);
 
-        public IEnumerable<T> Query<T>(string startingKey) where T : class, IEntity => Query<T>().Where(e => e.PrimaryKey.Contains(startingKey));
+        public IEnumerable<T> Query<T>(string startingKey) where T : class => Query<T>();
+
+        public IObservable<T> GetChanges<T>() where T : class
+        {
+            return _realm.All(typeof(T).Name).Subscribe().Results.OfType<T>().ToObservable();
+        }
     }
 }

@@ -1,4 +1,4 @@
-namespace EventSourcing.RocksDb.Serialization
+namespace EventSourcing.Contracts.Serialization
 {
     public interface ISerializer
     {

@@ -1,6 +1,6 @@
 using Google.Protobuf;
 
-namespace EventSourcing.Contracts
+namespace EventSourcing.Contracts.Serialization
 {
     public sealed class ProtobufMessageSerializer<TMessage> : IMessageSerializer<TMessage> where TMessage : IMessage<TMessage>, new()
     {

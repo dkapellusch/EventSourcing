@@ -13,7 +13,6 @@ namespace EventSourcing.KSQL
         private const string KsqlMediaType = "application/vnd.ksql.v1+json";
         private readonly HttpClient _client;
 
-
         public KsqlClient(HttpClient client)
         {
             _client = client;

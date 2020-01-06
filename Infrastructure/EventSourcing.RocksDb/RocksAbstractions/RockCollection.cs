@@ -4,9 +4,8 @@ using System.Globalization;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
-using EventSourcing.Contracts;
+using EventSourcing.Contracts.Serialization;
 using EventSourcing.RocksDb.Extensions;
-using EventSourcing.RocksDb.Serialization;
 using RocksDbSharp;
 
 namespace EventSourcing.RocksDb.RocksAbstractions

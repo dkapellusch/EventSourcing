@@ -1,79 +1,36 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
+using System.Reactive.Linq;
 using EventSourcing.Contracts;
-using EventSourcing.RocksDb.Extensions;
-using EventSourcing.RocksDb.Serialization;
-using RocksDbSharp;
 
 namespace EventSourcing.RocksDb.RocksAbstractions
 {
     public class RocksStore : IDataStore
     {
-        private readonly RocksDatabase _db;
-        private readonly ISerializer _serializer;
+        private readonly RockCollection _db;
 
-        public RocksStore(RocksDatabase db, ISerializer serializer)
+        public RocksStore(RockCollection db)
         {
             _db = db;
-            _serializer = serializer;
         }
 
-        private RocksDbSharp.RocksDb RocksDb => _db.RocksDb;
-
-        public void Save<T>(Func<T> transaction) where T : class, IEntity
+        public void Save<T>(Func<T> transaction, string primaryKey) where T : class
         {
             var entity = transaction();
-            RocksDb.Put(_serializer.Serialize(entity.PrimaryKey), _serializer.Serialize(entity), GetColumnFamily<T>());
-            entity.DataStore = this;
+            _db.Add(primaryKey, entity);
         }
 
-        public void Delete<T>(string primaryKey) where T : class, IEntity => RocksDb.Remove(primaryKey, GetColumnFamily<T>());
+        public void Delete<T>(string primaryKey) where T : class => _db.Delete<string, T>(primaryKey);
 
-        public T Get<T>(string primaryKey) where T : class, IEntity
-        {
-            var savedEntity = RocksDb.Get(Encoding.UTF8.GetBytes(primaryKey), GetColumnFamily<T>());
-            if (savedEntity is null)
-                return null;
+        public T Get<T>(string primaryKey) where T : class => _db.Get<string, T>(primaryKey);
 
-            var entity = _serializer.Deserialize<T>(savedEntity);
-            entity.DataStore = this;
-            return entity;
-        }
+        public IEnumerable<T> Query<T>() where T : class =>
+            _db.GetItems<string, T>().Select(kv => kv.value);
 
-        public IEnumerable<T> Query<T>() where T : class, IEntity
-        {
-            var iteratorOptions = new ReadOptions();
+        public IEnumerable<T> Query<T>(string startingKey) where T : class =>
+            _db.GetItems<string, T>(startingKey).Select(kv => kv.value);
 
-            return RocksDb
-                .NewIterator(GetColumnFamily<T>(), iteratorOptions)
-                .SeekToFirst()
-                .GetEnumerable()
-                .Select(kv =>
-                {
-                    var entity = _serializer.Deserialize<T>(kv.value);
-                    entity.DataStore = this;
-                    return entity;
-                });
-        }
-
-        public IEnumerable<T> Query<T>(string startingKey) where T : class, IEntity
-        {
-            var iteratorOptions = new ReadOptions();
-
-            return RocksDb
-                .NewIterator(GetColumnFamily<T>(), iteratorOptions)
-                .Seek(startingKey)
-                .GetEnumerable()
-                .Select(kv =>
-                {
-                    var entity = _serializer.Deserialize<T>(kv.value);
-                    entity.DataStore = this;
-                    return entity;
-                });
-        }
-
-        private ColumnFamilyHandle GetColumnFamily<T>() where T : class, IEntity => _db.GetOrCreateColumnFamily(typeof(T).Name);
+        public IObservable<T> GetChanges<T>() where T : class => _db.ChangedDataCaptureStream.OfType<DataChangedEvent<string, T>>().Select(dc => dc.Data.value);
     }
 }

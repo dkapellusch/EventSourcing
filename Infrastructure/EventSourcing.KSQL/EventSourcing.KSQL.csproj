@@ -10,4 +10,8 @@
       <PackageReference Include="System.Reactive" Version="4.2.0" />
     </ItemGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\..\EventSourcing.Contracts\EventSourcing.Contracts.csproj" />
+    </ItemGroup>
+
 </Project>

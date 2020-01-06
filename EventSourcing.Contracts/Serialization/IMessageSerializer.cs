@@ -1,4 +1,4 @@
-namespace EventSourcing.Contracts
+namespace EventSourcing.Contracts.Serialization
 {
     public interface IMessageSerializer<T>
     {

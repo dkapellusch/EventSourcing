@@ -1,10 +1,11 @@
 using System;
 using Confluent.Kafka;
 using EventSourcing.Contracts;
+using EventSourcing.Contracts.Serialization;
 
 namespace EventSourcing.Kafka
 {
-    internal sealed class KafkaSerializer<TMessage> : ISerializer<TMessage>, IDeserializer<TMessage>
+    internal sealed class KafkaSerializer<TMessage> : Confluent.Kafka.ISerializer<TMessage>, IDeserializer<TMessage>
     {
         private readonly IMessageSerializer<TMessage> _messageSerializer;
 

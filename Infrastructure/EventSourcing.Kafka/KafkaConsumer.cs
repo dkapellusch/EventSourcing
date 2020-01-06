@@ -5,6 +5,7 @@ using System.Reactive.Linq;
 using System.Threading;
 using Confluent.Kafka;
 using EventSourcing.Contracts;
+using EventSourcing.Contracts.Serialization;
 using Google.Protobuf;
 
 namespace EventSourcing.Kafka
@@ -61,7 +62,7 @@ namespace EventSourcing.Kafka
 
         public void SeekToOffset(long offset)
         {
-            var partitions = _consumer.Assignment.Select(a => a.Partition);
+            var partitions = _consumer.Assignment.Select(a => a.Partition).ToArray();
 
             if (!partitions.Any()) partitions = new[] {new Partition()};
 

@@ -2,7 +2,7 @@ using System.Text;
 using Google.Protobuf;
 using Google.Protobuf.Reflection;
 
-namespace EventSourcing.Contracts
+namespace EventSourcing.Contracts.Serialization
 {
     public sealed class JsonMessageSerializer<TMessage> : IMessageSerializer<TMessage> where TMessage : IMessage<TMessage>, new()
     {
