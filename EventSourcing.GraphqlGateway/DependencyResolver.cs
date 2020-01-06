@@ -8,21 +8,10 @@ namespace EventSourcing.GraphqlGateway
     {
         private readonly IServiceProvider _serviceProvider;
 
-        public DependencyResolver(IServiceProvider serviceProvider)
-        {
-            _serviceProvider = serviceProvider;
-        }
+        public DependencyResolver(IServiceProvider serviceProvider) => _serviceProvider = serviceProvider;
 
-        public T Resolve<T>()
-        {
-            var service = _serviceProvider.GetService<T>();
-            return service;
-        }
+        public T Resolve<T>() => _serviceProvider.GetService<T>();
 
-        public object Resolve(Type type)
-        {
-            var service = _serviceProvider.GetService(type);
-            return service;
-        }
+        public object Resolve(Type type) => _serviceProvider.GetService(type);
     }
 }

@@ -5,11 +5,17 @@ using System.Reactive.Linq;
 using System.Threading.Tasks;
 using FluentValidation;
 using Grpc.Core;
+using Newtonsoft.Json.Linq;
 
 namespace EventSourcing.Contracts
 {
     public static class Extensions
     {
+        public static void Add<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, KeyValuePair<TKey, TValue> keyValuePair)
+        {
+            dictionary.Add(keyValuePair.Key, keyValuePair.Value);
+        }
+
         public static T InitializeObject<T>(this IDictionary<string, dynamic> values) where T : new()
         {
             var instance = new T();
@@ -22,7 +28,7 @@ namespace EventSourcing.Contracts
                 {
                     property.SetValue(instance, value, null);
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
                     Console.WriteLine(ex);
                 }
@@ -73,5 +79,10 @@ namespace EventSourcing.Contracts
                 throw new RpcException(new Status(StatusCode.InvalidArgument, "Validation failed."), errorMessages);
             }
         }
+
+        public static string RemoveWhitespace(this string input) =>
+            new string(input.ToCharArray()
+                .Where(c => !char.IsWhiteSpace(c))
+                .ToArray());
     }
 }

@@ -24,10 +24,7 @@ namespace EventSourcing.GraphqlGateway
         {
             var currentAssembly = Assembly.GetEntryAssembly();
 
-            foreach (var type in currentAssembly.DefinedTypes.Where(t => typeof(IGraphType).IsAssignableFrom(t)))
-            {
-                services.AddSingleton(type.UnderlyingSystemType);
-            }
+            foreach (var type in currentAssembly.DefinedTypes.Where(t => typeof(IGraphType).IsAssignableFrom(t))) services.AddSingleton(type.UnderlyingSystemType);
 
             return services
                 .AddSingleton<IDependencyResolver, DependencyResolver>()

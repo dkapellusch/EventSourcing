@@ -25,8 +25,7 @@ namespace EventSourcing.KSQL
 
         public void Start(CancellationToken token)
         {
-            if (_streamSubject != null)
-                return;
+            if (_streamSubject != null) return;
 
             _streamSubject = new Subject<TRow>();
             _ = ConsumeAsync(token);

@@ -1,11 +1,9 @@
-CREATE TABLE vehicle_table AS SELECT vin, make, model, locationCode, COUNT(*) AS UpdateCount FROM vehicle_stream WINDOW TUMBLING (SIZE 1 MINUTES) GROUP BY vin, make, model, locationCode EMIT CHANGES;
-CREATE TABLE vehicle_table AS SELECT vin, make, model, locationCode FROM vehicle_stream GROUP BY vin, make, model, locationCode EMIT CHANGES;
+SET 'auto.offset.reset'='earliest';
 
+Create stream Vehicles (Vin string, Make string, Model string, LocationCode string) WITH (KAFKA_TOPIC='Vehicles', VALUE_FORMAT='json') EMIT CHANGES;
 
-CREATE TABLE vehicles_good AS SELECT COLLECT_SET(vin), locationCode FROM vehicles groupby vin ;
-
-
-CREATE TABLE vehicles_vin AS SELECT vin , COUNT(*) AS TOTAL FROM vehicles GROUP BY vin;
-CREATE TABLE vehicles_good AS SELECT vin , HISTOGRAM(locationCode) AS TOTAL FROM vehicles GROUP BY vin;
 CREATE TABLE vehicles_all AS SELECT vin , COLLECT_LIST(locationCode) AS locationCode, COLLECT_LIST(make) as make, COLLECT_LIST(model) as model FROM vehicles GROUP BY vin;
-CREATE TABLE vehicles_time AS SELECT vin, locationCode , WindowStart() as ws  FROM vehicles groupby ws;
+
+Create Table vehicles_count AS SELECT 1 AS Counter FROM vehicles_all;
+
+docker run --name ksql-cli --network host -it confluentinc/ksqldb-cli ksql http://0.0.0.0:8088
