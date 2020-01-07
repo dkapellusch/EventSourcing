@@ -13,10 +13,7 @@ namespace EventSourcing.KSQL
         private const string KsqlMediaType = "application/vnd.ksql.v1+json";
         private readonly HttpClient _client;
 
-        public KsqlClient(HttpClient client)
-        {
-            _client = client;
-        }
+        public KsqlClient(HttpClient client) => _client = client;
 
         public async Task<Stream> ExecuteQueryAsync(KsqlQuery query, CancellationToken token = default)
         {

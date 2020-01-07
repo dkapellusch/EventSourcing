@@ -19,10 +19,7 @@ namespace EventSourcing.GraphqlGateway.Graphql
         private void AddMutations<T>() where T : IComplexGraphType
         {
             var subQuery = _resolver.Resolve<T>();
-            foreach (var field in subQuery.Fields)
-            {
-                Field(field.Type, field.Name, field.Description, field.Arguments, ctx => field.Resolver.Resolve(ctx as ResolveFieldContext));
-            }
+            foreach (var field in subQuery.Fields) Field(field.Type, field.Name, field.Description, field.Arguments, ctx => field.Resolver.Resolve(ctx as ResolveFieldContext));
         }
     }
 }

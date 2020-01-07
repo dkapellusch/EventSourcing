@@ -1,5 +1,4 @@
 using Confluent.Kafka;
-using EventSourcing.Contracts;
 using EventSourcing.Contracts.Serialization;
 using Google.Protobuf;
 using Microsoft.Extensions.DependencyInjection;

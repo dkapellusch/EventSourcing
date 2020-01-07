@@ -2,7 +2,6 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Confluent.Kafka;
-using EventSourcing.Contracts;
 using EventSourcing.Contracts.Serialization;
 using Google.Protobuf;
 

@@ -17,10 +17,7 @@ namespace EventSourcing.GraphqlGateway.Graphql
         private void AddSubscriptions<T>() where T : IComplexGraphType
         {
             var subQuery = _resolver.Resolve<T>();
-            foreach (var field in subQuery.Fields)
-            {
-                AddField(field);
-            }
+            foreach (var field in subQuery.Fields) AddField(field);
         }
     }
 }

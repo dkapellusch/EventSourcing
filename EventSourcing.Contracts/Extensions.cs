@@ -5,7 +5,6 @@ using System.Reactive.Linq;
 using System.Threading.Tasks;
 using FluentValidation;
 using Grpc.Core;
-using Newtonsoft.Json.Linq;
 
 namespace EventSourcing.Contracts
 {

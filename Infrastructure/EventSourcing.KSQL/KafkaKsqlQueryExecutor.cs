@@ -1,10 +1,9 @@
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using EventSourcing.Contracts;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace EventSourcing.KSQL
 {
@@ -14,17 +13,17 @@ namespace EventSourcing.KSQL
 
         public KafkaKsqlQueryExecutor(KsqlClient ksqlRestClient) => _ksqlRestClient = ksqlRestClient;
 
-        public async IAsyncEnumerable<T> ExecuteQuery<T>(KsqlQuery query, Mapper<T> mapper)
+        public async IAsyncEnumerable<T> ExecuteQuery<T>(KsqlQuery query, Mapper<T> mapper, CancellationToken token = default)
         {
-            await using var queryStream = await _ksqlRestClient.ExecuteQueryAsync(query);
+            await using var queryStream = await _ksqlRestClient.ExecuteQueryAsync(query, token);
             using var streamReader = new StreamReader(queryStream);
 
-            var header = GetHeader(streamReader);
+            var header = ParseKeyToObject<Header>(streamReader, "header");
             var columns = header.Columns;
 
             while (!streamReader.EndOfStream)
             {
-                var row = GetRow(streamReader);
+                var row = ParseKeyToObject<Row>(streamReader, "row");
 
                 if (row.IsNullOrDefault()) yield break;
 
@@ -32,31 +31,15 @@ namespace EventSourcing.KSQL
             }
         }
 
-        private static Header GetHeader(StreamReader streamReader)
+        private static T ParseKeyToObject<T>(StreamReader streamReader, string key) where T : class
         {
-            while (!streamReader.EndOfStream)
-            {
-                var line = streamReader.ReadChunk("},");
-                var header = line.Substring(1, line.LastIndexOf('}'));
-                return JsonConvert.DeserializeObject<HeaderWrapper>(header).Header;
-            }
+            streamReader.SeekTo($"\"{key}\":");
+            var chunk = streamReader.ReadChunk("},");
+            var lastIndex = chunk.LastIndexOf('}');
+            if (lastIndex < 0) return null;
 
-            return null;
-        }
-
-        private static Row GetRow(StreamReader streamReader)
-        {
-            while (!streamReader.EndOfStream)
-            {
-                var line = streamReader.ReadChunk("},");
-                var row = line.Substring(1, line.LastIndexOf('}'));
-                var rowWrapper = JsonConvert.DeserializeObject<RowWrapper>(row);
-                if (rowWrapper.LimitReached) return null;
-
-                return rowWrapper.Row;
-            }
-
-            return null;
+            var jsonObject = chunk.Substring(0, lastIndex);
+            return JsonConvert.DeserializeObject<T>(jsonObject);
         }
     }
 }

@@ -14,10 +14,7 @@ namespace EventSourcing.Contracts.Serialization
         {
         }
 
-        public JsonMessageSerializer(Encoding encoding)
-        {
-            _encoding = encoding;
-        }
+        public JsonMessageSerializer(Encoding encoding) => _encoding = encoding;
 
         public TMessage Deserialize(byte[] bytes) => _jsonParser.Parse<TMessage>(_encoding.GetString(bytes));
 

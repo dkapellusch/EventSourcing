@@ -1,9 +1,11 @@
 ﻿using System;
 using System.IO;
+using System.Net.Http;
 using System.Threading.Tasks;
 using Confluent.Kafka;
 using EventSourcing.Contracts;
 using EventSourcing.Kafka;
+using EventSourcing.KSQL;
 using EventSourcing.RocksDb.Extensions;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Builder;
@@ -28,7 +30,10 @@ namespace EventSourcing.VehicleReadService
         private static IWebHostBuilder CreateHostBuilder(string[] args) => WebHost.CreateDefaultBuilder(args)
             .ConfigureKestrel(options => options.ListenAnyIP(5001, o => o.Protocols = HttpProtocols.Http2))
             .ConfigureServices((hostContext, services) => services
-                .AddSingleton<VehicleReadService>()
+                .AddSingleton(new KsqlClient(new HttpClient {BaseAddress = new Uri("http://localhost:8088/query")}))
+                .AddSingleton<KafkaKsqlQueryExecutor>()
+                .AddSingleton<VehicleKsqlTable>()
+                .AddSingleton<KsqlVehicleReadService>()
                 .AddKafkaConsumer<Vehicle>(new ConsumerConfig
                 {
                     BootstrapServers = Configuration.GetValue<string>("kafka:host"),
@@ -42,7 +47,7 @@ namespace EventSourcing.VehicleReadService
             )
             .Configure(builder => builder
                 .UseRouting()
-                .UseEndpoints(endpointBuilder => endpointBuilder.MapGrpcService<VehicleReadService>())
+                .UseEndpoints(endpointBuilder => endpointBuilder.MapGrpcService<KsqlVehicleReadService>())
             );
     }
 }

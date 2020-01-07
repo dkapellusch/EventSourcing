@@ -1,4 +1,3 @@
-using EventSourcing.Contracts;
 using EventSourcing.Contracts.Serialization;
 using EventSourcing.RocksDb.RocksAbstractions;
 using Microsoft.Extensions.DependencyInjection;

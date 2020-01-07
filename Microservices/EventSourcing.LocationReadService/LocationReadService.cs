@@ -10,10 +10,7 @@ namespace EventSourcing.LocationReadService
     {
         private readonly KafkaBackedDb<Location> _db;
 
-        public LocationReadService(KafkaBackedDb<Location> db)
-        {
-            _db = db;
-        }
+        public LocationReadService(KafkaBackedDb<Location> db) => _db = db;
 
         public override Task<Location> GetLocation(LocationRequest request, ServerCallContext context) =>
             Task.FromResult(

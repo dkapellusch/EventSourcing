@@ -31,6 +31,18 @@ namespace EventSourcing.KSQL
             return string.Empty;
         }
 
+        public static void SeekTo(this StreamReader reader, string target)
+        {
+            target = target.ToLowerInvariant();
+            var targetBuffer = new CircularBuffer<char>(target.Length);
+            while (reader.Peek() >= 0)
+            {
+                var character = (char) reader.Read();
+                targetBuffer.Enqueue(character);
+                if (targetBuffer.ToString() == target || reader.EndOfStream) return;
+            }
+        }
+
         private sealed class CircularBuffer<T> : Queue<T>
         {
             private readonly int _capacity;
@@ -44,7 +56,7 @@ namespace EventSourcing.KSQL
                 base.Enqueue(item);
             }
 
-            public override string ToString() => string.Join("", this);
+            public override string ToString() => string.Join("", this).ToLowerInvariant();
         }
     }
 }

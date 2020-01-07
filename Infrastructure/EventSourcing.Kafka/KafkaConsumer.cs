@@ -66,10 +66,7 @@ namespace EventSourcing.Kafka
 
             if (!partitions.Any()) partitions = new[] {new Partition()};
 
-            foreach (var partition in partitions)
-            {
-                Seek(partition, offset);
-            }
+            foreach (var partition in partitions) Seek(partition, offset);
         }
 
         public IEnumerable<TopicPartitionOffset> GetOffsetsFromTime(DateTime time)

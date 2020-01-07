@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using EventSourcing.Contracts;
 using Newtonsoft.Json.Linq;
@@ -9,8 +10,8 @@ namespace EventSourcing.KSQL
 {
     public class VehicleKsqlTable
     {
-        private readonly KafkaKsqlQueryExecutor _ksqlQueryExecutor;
         private readonly KsqlQuery _getCountQuery;
+        private readonly KafkaKsqlQueryExecutor _ksqlQueryExecutor;
 
         public VehicleKsqlTable(KafkaKsqlQueryExecutor ksqlQueryExecutor)
         {
@@ -18,14 +19,21 @@ namespace EventSourcing.KSQL
             _getCountQuery = new KsqlQuery
             {
                 Ksql = "Select count(counter) from Vehicles_Count group by counter emit changes limit 1;",
-                StreamProperties = {{"ksql.streams.auto.offset.reset", "earliest"}}
+                StreamProperties = {KsqlQuery.OffsetEarliest}
             };
         }
 
-        public async Task<List<Vehicle>> GetAllVehicles()
+        public IAsyncEnumerable<Vehicle> GetVehicleUpdatesAsync(CancellationToken token = default) =>
+            _ksqlQueryExecutor.ExecuteQuery(new KsqlQuery
+                {
+                    Ksql = "Select * from vehicles_all emit changes;"
+                },
+                ParseVehicle);
+
+        public async Task<List<Vehicle>> GetAllVehiclesAsync()
         {
-            var count = await Enumerate(_ksqlQueryExecutor.ExecuteQuery(_getCountQuery, columns => columns.First().Value));
-            var allVehicles = await Enumerate(_ksqlQueryExecutor.ExecuteQuery(new KsqlQuery
+            var count = await EnumerateAsync(_ksqlQueryExecutor.ExecuteQuery(_getCountQuery, columns => columns.First().Value));
+            var allVehicles = await EnumerateAsync(_ksqlQueryExecutor.ExecuteQuery(new KsqlQuery
                 {
                     Ksql = $"Select * from vehicles_all emit changes limit {count[0]};",
                     StreamProperties = {KsqlQuery.OffsetEarliest}
@@ -35,9 +43,9 @@ namespace EventSourcing.KSQL
             return allVehicles;
         }
 
-        public async Task<Vehicle> GetVehicleByVin(string vin)
+        public async Task<Vehicle> GetVehicleByVinAsync(string vin)
         {
-            var results = await Enumerate(_ksqlQueryExecutor.ExecuteQuery(new KsqlQuery
+            var results = await EnumerateAsync(_ksqlQueryExecutor.ExecuteQuery(new KsqlQuery
                 {
                     Ksql = $"Select * from vehicles_all where rowkey = '{vin}';"
                 },
@@ -45,12 +53,10 @@ namespace EventSourcing.KSQL
             return results.FirstOrDefault();
         }
 
-        private static async Task<List<T>> Enumerate<T>(IAsyncEnumerable<T> asyncEnumerable)
+        private static async Task<List<T>> EnumerateAsync<T>(IAsyncEnumerable<T> asyncEnumerable)
         {
             var items = new List<T>();
-
             await foreach (var element in asyncEnumerable) items.Add(element);
-
             return items;
         }
 
@@ -69,7 +75,7 @@ namespace EventSourcing.KSQL
             if (valueType == typeof(JArray)) value = value.Last;
 
             string valueString = value?.ToString() ?? string.Empty;
-            return valueString.RemoveWhitespace().Replace("null,", string.Empty);
+            return valueString.RemoveWhitespace().Replace("null", string.Empty).Trim(',');
         }
     }
 }

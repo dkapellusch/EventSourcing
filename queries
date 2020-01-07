@@ -2,7 +2,7 @@ SET 'auto.offset.reset'='earliest';
 
 Create stream Vehicles (Vin string, Make string, Model string, LocationCode string) WITH (KAFKA_TOPIC='Vehicles', VALUE_FORMAT='json') EMIT CHANGES;
 
-CREATE TABLE vehicles_all AS SELECT vin , COLLECT_LIST(locationCode) AS locationCode, COLLECT_LIST(make) as make, COLLECT_LIST(model) as model FROM vehicles GROUP BY vin;
+CREATE TABLE vehicles_all AS SELECT vin , COLLECT_SET(locationCode) AS locationCode, COLLECT_SET(make) as make, COLLECT_SET(model) as model FROM vehicles GROUP BY vin;
 
 Create Table vehicles_count AS SELECT 1 AS Counter FROM vehicles_all;
 

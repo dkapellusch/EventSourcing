@@ -15,14 +15,12 @@ namespace EventSourcing.RocksDb.RocksAbstractions
                 var currentColumnFamilies = RocksDbSharp.RocksDb.ListColumnFamilies(new DbOptions(), databasePath);
 
                 foreach (var columnFamily in currentColumnFamilies.ToHashSet())
-                {
                     columnFamilies.Add(columnFamily,
                         new ColumnFamilyOptions()
                             .SetPrefixExtractor(prefixTransform)
                             .SetBlockBasedTableFactory(new BlockBasedTableOptions()
                                 .SetWholeKeyFiltering(true)
                                 .SetIndexType(BlockBasedTableIndexType.Binary)));
-                }
             }
 
             return RocksDbSharp.RocksDb.Open(new DbOptions()

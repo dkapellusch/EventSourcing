@@ -9,10 +9,7 @@ namespace EventSourcing.LocationWriteService
     {
         private readonly KafkaProducer<string, Location> _kafkaProducer;
 
-        public LocationWriteService(KafkaProducer<string, Location> kafkaProducer)
-        {
-            _kafkaProducer = kafkaProducer;
-        }
+        public LocationWriteService(KafkaProducer<string, Location> kafkaProducer) => _kafkaProducer = kafkaProducer;
 
         public override async Task<Location> AddLocation(Location request, ServerCallContext context)
         {

@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Linq;
-using System.Reactive.Subjects;
 using EventSourcing.Contracts;
 using Realms;
 using Realms.Sync;
@@ -13,14 +12,11 @@ namespace EventSourcing.RealmDb
     {
         private readonly Realm _realm;
 
-        public RealmStore()
-        {
-            _realm = Realm.GetInstance(new RealmConfiguration("./realm.db") {SchemaVersion = 1, ShouldDeleteIfMigrationNeeded = true});
-        }
+        public RealmStore() => _realm = Realm.GetInstance(new RealmConfiguration("./realm.db") {SchemaVersion = 1, ShouldDeleteIfMigrationNeeded = true});
 
         public void Save<T>(Func<T> transaction, string primaryKey) where T : class
         {
-            _realm.Write(action: () =>
+            _realm.Write(() =>
             {
                 var e = transaction();
                 if (e is RealmObject r) _realm.Add(r);
@@ -48,9 +44,6 @@ namespace EventSourcing.RealmDb
 
         public IEnumerable<T> Query<T>(string startingKey) where T : class => Query<T>();
 
-        public IObservable<T> GetChanges<T>() where T : class
-        {
-            return _realm.All(typeof(T).Name).Subscribe().Results.OfType<T>().ToObservable();
-        }
+        public IObservable<T> GetChanges<T>() where T : class => _realm.All(typeof(T).Name).Subscribe().Results.OfType<T>().ToObservable();
     }
 }

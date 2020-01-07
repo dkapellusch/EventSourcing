@@ -10,10 +10,7 @@ namespace EventSourcing.RocksDb.RocksAbstractions
     {
         private readonly RockCollection _db;
 
-        public RocksStore(RockCollection db)
-        {
-            _db = db;
-        }
+        public RocksStore(RockCollection db) => _db = db;
 
         public void Save<T>(Func<T> transaction, string primaryKey) where T : class
         {

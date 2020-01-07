@@ -1,6 +1,5 @@
 using System;
 using Confluent.Kafka;
-using EventSourcing.Contracts;
 using EventSourcing.Contracts.Serialization;
 
 namespace EventSourcing.Kafka
@@ -9,10 +8,7 @@ namespace EventSourcing.Kafka
     {
         private readonly IMessageSerializer<TMessage> _messageSerializer;
 
-        public KafkaSerializer(IMessageSerializer<TMessage> messageSerializer)
-        {
-            _messageSerializer = messageSerializer;
-        }
+        public KafkaSerializer(IMessageSerializer<TMessage> messageSerializer) => _messageSerializer = messageSerializer;
 
         public TMessage Deserialize(ReadOnlySpan<byte> data, bool isNull, SerializationContext context) =>
             isNull || data.IsEmpty || data.Length <= 0

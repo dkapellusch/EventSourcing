@@ -9,10 +9,7 @@ namespace EventSourcing.GraphqlGateway.Graphql.Location
     {
         private readonly VehicleReadClient _vehicleReadClient;
 
-        public LocationVehicleResolver(VehicleReadClient vehicleReadClient)
-        {
-            _vehicleReadClient = vehicleReadClient;
-        }
+        public LocationVehicleResolver(VehicleReadClient vehicleReadClient) => _vehicleReadClient = vehicleReadClient;
 
         public async Task<Contracts.Vehicle[]> Resolve(Contracts.Location source)
         {

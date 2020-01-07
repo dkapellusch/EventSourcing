@@ -11,10 +11,11 @@ namespace EventSourcing.RealmDb
             var v = realm.Get<VehicleEntity>("123456") ?? new VehicleEntity {Vin = "123456"};
 
             realm.Save(() =>
-            {
-                v.Make = "Honda";
-                return v;
-            }, v.Vin);
+                {
+                    v.Make = "Honda";
+                    return v;
+                },
+                v.Vin);
             Console.WriteLine(realm.Get<VehicleEntity>("123456").Make);
         }
     }

@@ -3,14 +3,15 @@ using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Threading;
 using System.Threading.Tasks;
+using EventSourcing.Contracts;
 
 namespace EventSourcing.KSQL
 {
     public sealed class KafkaKsqlConsumer<TRow>
     {
-        private readonly KafkaKsqlQueryExecutor _queryExecutor;
-        private readonly KsqlQuery _query;
         private readonly Mapper<TRow> _mapper;
+        private readonly KsqlQuery _query;
+        private readonly KafkaKsqlQueryExecutor _queryExecutor;
 
         private Subject<TRow> _streamSubject;
 
@@ -25,20 +26,15 @@ namespace EventSourcing.KSQL
 
         public void Start(CancellationToken token)
         {
-            if (_streamSubject != null) return;
+            if (_streamSubject.IsNotNullOrDefault()) return;
 
             _streamSubject = new Subject<TRow>();
             _ = ConsumeAsync(token);
         }
 
-        private Task ConsumeAsync(CancellationToken token) =>
-            Task.Run(async () =>
-                {
-                    await foreach (var row in _queryExecutor.ExecuteQuery(_query, _mapper).WithCancellation(token))
-                    {
-                        _streamSubject.OnNext(row);
-                    }
-                },
-                token);
+        private async Task ConsumeAsync(CancellationToken token)
+        {
+            await foreach (var row in _queryExecutor.ExecuteQuery(_query, _mapper).WithCancellation(token)) _streamSubject.OnNext(row);
+        }
     }
 }
