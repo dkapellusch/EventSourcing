@@ -6,8 +6,8 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Fody" Version="6.0.5" />
-        <PackageReference Include="PropertyChanged.Fody" Version="3.2.1" />
+        <PackageReference Include="Fody" Version="6.0.6" />
+        <PackageReference Include="PropertyChanged.Fody" Version="3.2.2" />
         <PackageReference Include="Realm" Version="4.2.0" />
         <PackageReference Include="Realm.Fody" Version="4.2.0" />
     </ItemGroup>

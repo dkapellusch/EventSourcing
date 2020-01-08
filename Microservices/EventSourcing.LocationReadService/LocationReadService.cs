@@ -1,4 +1,5 @@
 using System.Linq;
+using System.Reactive.Linq;
 using System.Threading.Tasks;
 using EventSourcing.Contracts;
 using EventSourcing.Kafka;
@@ -19,5 +20,8 @@ namespace EventSourcing.LocationReadService
             );
 
         public override Task<Locations> GetAllLocations(Empty request, ServerCallContext context) => Task.FromResult(new Locations {Elements = {_db.GetAll().ToArray()}});
+
+        public override async Task GetLocationUpdates(Empty request, IServerStreamWriter<Location> responseStream, ServerCallContext context) =>
+            await _db.GetChanges().ForEachAsync(message => responseStream.WriteAsync(message), context.CancellationToken);
     }
 }

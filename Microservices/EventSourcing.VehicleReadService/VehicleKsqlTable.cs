@@ -4,9 +4,10 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using EventSourcing.Contracts;
+using EventSourcing.KSQL;
 using Newtonsoft.Json.Linq;
 
-namespace EventSourcing.KSQL
+namespace EventSourcing.VehicleReadService
 {
     public class VehicleKsqlTable
     {

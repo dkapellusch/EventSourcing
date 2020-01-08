@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using EventSourcing.Contracts;
 using Newtonsoft.Json;
@@ -13,7 +14,7 @@ namespace EventSourcing.KSQL
 
         public KafkaKsqlQueryExecutor(KsqlClient ksqlRestClient) => _ksqlRestClient = ksqlRestClient;
 
-        public async IAsyncEnumerable<T> ExecuteQuery<T>(KsqlQuery query, Mapper<T> mapper, CancellationToken token = default)
+        public async IAsyncEnumerable<T> ExecuteQuery<T>(KsqlQuery query, Mapper<T> mapper, [EnumeratorCancellation] CancellationToken token = default)
         {
             await using var queryStream = await _ksqlRestClient.ExecuteQueryAsync(query, token);
             using var streamReader = new StreamReader(queryStream);

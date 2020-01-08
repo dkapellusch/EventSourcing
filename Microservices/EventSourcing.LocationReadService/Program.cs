@@ -32,7 +32,7 @@ namespace EventSourcing.LocationReadService
                 .AddKafkaConsumer<Location>(new ConsumerConfig
                 {
                     BootstrapServers = Configuration.GetValue<string>("kafka:host"),
-                    GroupId = "LocationRead",
+                    GroupId = Guid.NewGuid().ToString(),
                     ClientId = Guid.NewGuid().ToString(),
                     AutoOffsetReset = AutoOffsetReset.Earliest
                 })
