@@ -1,0 +1,23 @@
+syntax = "proto3";
+option csharp_namespace = "EventSourcing.Contracts";
+package ES;
+
+import "Empty.proto";
+import "google/protobuf/timestamp.proto";
+
+message Lock {
+    string Vin = 1;
+    google.protobuf.Timestamp Expiry = 2;
+    string LockId = 3;
+}
+
+service Lock {
+    rpc LockVehicle (Lock) returns (Lock) {
+    }
+
+    rpc ReleaseLock (Lock) returns (Lock) {
+    } 
+    
+    rpc ExpiringLocks (Empty) returns (stream Lock) {
+    }
+}

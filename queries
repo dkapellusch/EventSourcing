@@ -1,9 +1,23 @@
 SET 'auto.offset.reset'='earliest';
 
 Create stream Vehicles (Vin string, Make string, Model string, LocationCode string) WITH (KAFKA_TOPIC='Vehicles', VALUE_FORMAT='json');
+insert into vehicles (vin, locationCode, make, model) values ('12345678912345678', 'PHX-IC', 'Toyota', 'Camry');
 
 CREATE TABLE vehicles_all AS SELECT vin , Collect_List(locationCode) AS locationCode, Collect_List(make) as make, Collect_List(model) as model FROM vehicles GROUP BY vin;
+CREATE TABLE vehicles_table AS SELECT vin , locationCode, make, model from vehicles;
+CREATE TABLE vehicles_all2 AS SELECT vin , TopK(locationCode, 1) AS locationCode, TopKDistinct(make,1) as make, TopKDistinct(model,1) as model FROM vehicles order by rowtime;
 
 Create Table vehicles_count AS SELECT 1 AS Counter FROM vehicles_all;
 
 docker run --name ksql-cli --network host -it confluentinc/ksqldb-cli ksql http://0.0.0.0:8088
+
+
+CREATE TABLE expiring_soon AS SELECT lockId, vin, expiry_time
+  WINDOW HOPPING (SIZE 30 SECONDS, ADVANCE BY 10 SECONDS)
+ where (rowtime + 300000) >= UNIX_DATE()
+
+
+SELECT deal_id, TOPK(deal_price, 5), HISTOGRAM(deal_price) as deal_buckets FROM deals
+ WINDOW TUMBLING (SIZE 1 HOUR) 
+ GROUP BY deal_id
+ emit changes;
