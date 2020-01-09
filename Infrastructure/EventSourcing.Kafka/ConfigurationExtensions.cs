@@ -15,6 +15,6 @@ namespace EventSourcing.Kafka
         public static IServiceCollection AddKafkaProducer<TKey, TPayload>(this IServiceCollection services, ProducerConfig config, string topic = null) where TPayload : IMessage<TPayload>, new() =>
             services
                 .AddSingleton(typeof(IMessageSerializer<>), typeof(JsonMessageSerializer<>))
-                .AddTransient(p => new KafkaProducer<TKey, TPayload>(config, p.GetService<IMessageSerializer<TPayload>>(), topic));
+                .AddSingleton(p => new KafkaProducer<TKey, TPayload>(config, p.GetService<IMessageSerializer<TPayload>>(), topic));
     }
 }

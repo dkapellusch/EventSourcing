@@ -12,12 +12,9 @@ Create Table vehicles_count AS SELECT 1 AS Counter FROM vehicles_all;
 docker run --name ksql-cli --network host -it confluentinc/ksqldb-cli ksql http://0.0.0.0:8088
 
 
-CREATE TABLE expiring_soon AS SELECT lockId, vin, expiry_time
-  WINDOW HOPPING (SIZE 30 SECONDS, ADVANCE BY 10 SECONDS)
- where (rowtime + 300000) >= UNIX_DATE()
 
 
-SELECT deal_id, TOPK(deal_price, 5), HISTOGRAM(deal_price) as deal_buckets FROM deals
- WINDOW TUMBLING (SIZE 1 HOUR) 
- GROUP BY deal_id
- emit changes;
+Create stream Locks (Vin string, Expiry string, LockId string) WITH (KAFKA_TOPIC='Locks', VALUE_FORMAT='json');
+CREATE TABLE expired_locks as Select vin, count(vin) as vinCount, lockId, collect_set(STRINGTOTimeStamp(expiry, 'yyyy-MM-dd''T''HH:mm:ss.SSSSSS''Z''','UTC') < UNIX_TIMESTAMP()) as expired from locks WINDOW HOPPING (SIZE 30 SECONDS, ADVANCE BY 10 SECONDS)  group by vin,lockId emit changes;
+insert into locks select * from locks WINDOW HOPPING (SIZE 60 SECONDS, ADVANCE BY 10 SECONDS) where STRINGTOTimeStamp(expiry, 'yyyy-MM-dd''T''HH:mm:ss.SSSSSS''Z''','UTC') + 60000  >= UNIX_TIMESTAMP()
+

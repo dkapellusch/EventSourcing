@@ -53,7 +53,7 @@ namespace EventSourcing.Kafka
 
                 return consumeResult;
             }
-            catch (ConsumeException)
+            catch (Exception)
             {
             }
 

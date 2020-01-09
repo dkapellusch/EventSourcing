@@ -27,7 +27,7 @@ service VehicleRead {
 
     rpc GetVehiclesByPartialVin (VehicleRequest) returns (Vehicles) {
     }
-    
+
     rpc GetAllVehicles (Empty) returns (Vehicles) {
     }
 

@@ -5,19 +5,28 @@ package ES;
 import "Empty.proto";
 import "google/protobuf/timestamp.proto";
 
+message LockRequest {
+    string Vin = 1;
+}
+
 message Lock {
     string Vin = 1;
     google.protobuf.Timestamp Expiry = 2;
     string LockId = 3;
 }
 
-service Lock {
-    rpc LockVehicle (Lock) returns (Lock) {
+service LockWrite {
+    rpc LockVehicle (LockRequest) returns (Lock) {
     }
 
-    rpc ReleaseLock (Lock) returns (Lock) {
-    } 
-    
+    rpc ReleaseLock (Lock) returns (Empty) {
+    }
+}
+
+service LockRead {
+    rpc GetLock (LockRequest) returns (Lock) {
+        
+    }
     rpc ExpiringLocks (Empty) returns (stream Lock) {
     }
 }
