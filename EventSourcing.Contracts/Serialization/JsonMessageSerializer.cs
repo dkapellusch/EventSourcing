@@ -8,7 +8,7 @@ namespace EventSourcing.Contracts.Serialization
     {
         private readonly Encoding _encoding;
         private readonly JsonFormatter _jsonFormatter = new JsonFormatter(JsonFormatter.Settings.Default.WithTypeRegistry(TypeRegistry.FromMessages(new TMessage().Descriptor)));
-        private readonly JsonParser _jsonParser = new JsonParser(new JsonParser.Settings(1000, TypeRegistry.FromMessages(new TMessage().Descriptor)));
+        private readonly JsonParser _jsonParser = new JsonParser(new JsonParser.Settings(1000, TypeRegistry.FromMessages(new TMessage().Descriptor)).WithIgnoreUnknownFields(true));
 
         public JsonMessageSerializer() : this(Encoding.UTF8)
         {

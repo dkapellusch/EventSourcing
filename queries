@@ -1,20 +1,103 @@
 SET 'auto.offset.reset'='earliest';
+SET 'auto.offset.reset'='latest';
+
+Vehicles
+_________________________________________________________________________________________________________
 
 Create stream Vehicles (Vin string, Make string, Model string, LocationCode string) WITH (KAFKA_TOPIC='Vehicles', VALUE_FORMAT='json');
-insert into vehicles (vin, locationCode, make, model) values ('12345678912345678', 'PHX-IC', 'Toyota', 'Camry');
 
 CREATE TABLE vehicles_all AS SELECT vin , Collect_List(locationCode) AS locationCode, Collect_List(make) as make, Collect_List(model) as model FROM vehicles GROUP BY vin;
 CREATE TABLE vehicles_table AS SELECT vin , locationCode, make, model from vehicles;
-CREATE TABLE vehicles_all2 AS SELECT vin , TopK(locationCode, 1) AS locationCode, TopKDistinct(make,1) as make, TopKDistinct(model,1) as model FROM vehicles order by rowtime;
 
 Create Table vehicles_count AS SELECT 1 AS Counter FROM vehicles_all;
 
 docker run --name ksql-cli --network host -it confluentinc/ksqldb-cli ksql http://0.0.0.0:8088
 
+Timer
+_________________________________________________________________________________________________________
 
+create stream Ticks (CurrentTime string, RoutingKey string, Originator string, TimerId string)  WITH (KAFKA_TOPIC='Ticks', VALUE_FORMAT='json');
 
+Create Table Ticks as Select TopK(LastTickTime, 2) as LastTickTimes, TimerId, count(TimerId) as TickCount from Timer WINDOW HOPPING (SIZE 120 SECONDS, ADVANCE BY 60 SECONDS) group by TimerId emit changes;
+Create Table Ticks as Select TimerId, count(TimerId) as TickCount from Timer WINDOW HOPPING (SIZE 120 SECONDS, ADVANCE BY 60 SECONDS) group by TimerId emit changes;
 
-Create stream Locks (Vin string, Expiry string, LockId string) WITH (KAFKA_TOPIC='Locks', VALUE_FORMAT='json');
-CREATE TABLE expired_locks as Select vin, count(vin) as vinCount, lockId, collect_set(STRINGTOTimeStamp(expiry, 'yyyy-MM-dd''T''HH:mm:ss.SSSSSS''Z''','UTC') < UNIX_TIMESTAMP()) as expired from locks WINDOW HOPPING (SIZE 30 SECONDS, ADVANCE BY 10 SECONDS)  group by vin,lockId emit changes;
-insert into locks select * from locks WINDOW HOPPING (SIZE 60 SECONDS, ADVANCE BY 10 SECONDS) where STRINGTOTimeStamp(expiry, 'yyyy-MM-dd''T''HH:mm:ss.SSSSSS''Z''','UTC') + 60000  >= UNIX_TIMESTAMP()
+Insert into Timer select UNIX_TIMESTAMP() as LastTickTime, 1 as TimerId from Ticks;
 
+Insert into Timer (LastTickTime, TimerId) values (UNIX_TIMESTAMP(),1)
+
+Locks 
+_________________________________________________________________________________________________________
+Create stream Locks (
+  Vin string,
+  Expiry string,
+  LockId string,
+  Expired boolean
+) WITH (KAFKA_TOPIC = 'Locks', VALUE_FORMAT = 'json');
+
+insert into locks 
+select vin, Expiry, lockId, STRINGTOTimeStamp(expiry,'yyyy-MM-dd''T''HH:mm:ss.SSSSSS''Z''','UTC') <= UNIX_TIMESTAMP() as expired
+ from locks WINDOW TUMBLING (SIZE 60 Seconds) 
+ where expired is null or expired = false;
+
+Create Table lock_status as
+Select
+  collect_set(vin) as vin,
+  lockId,
+  collect_set(expiry) as expiration,
+  collect_set(expired) as expired
+from locks 
+  group by lockId
+emit changes;
+
+Create Table expired_locks as
+Select
+  collect_set(vin) as vin,
+  lockId,
+  collect_set(expiry) as expiration
+from locks
+  where expired
+  group by lockId
+emit changes;
+
+Create Table lock_changes as
+Select
+  count(lockId) as evaluationCount,
+  lockId,
+  collect_set(expiry) as expiration,
+  collect_set(expired) as expired
+from locks WINDOW HOPPING (SIZE 5 SECONDS, ADVANCE BY 1 SECONDS)
+  GROUP BY lockId HAVING COUNT(*) < 2
+emit changes;
+
+CREATE STREAM LocksWithRoutingKey AS SELECT vin, expiry, lockId, case when expired is null then false else expired end as expired, 'locks' as RoutingKey FROM locks where (expired is null or expired = false);
+
+Create Stream LockTicks as select 
+LocksWithRoutingKey.vin as vin,
+LocksWithRoutingKey.expiry as expiry,
+LocksWithRoutingKey.lockId as lockId,
+STRINGTOTimeStamp(Expiry,'yyyy-MM-dd''T''HH:mm:ss.SSSSSS''Z''','UTC') <= UNIX_TIMESTAMP() as expired
+from ticks join LocksWithRoutingKey within 48 hours on ticks.routingkey=LocksWithRoutingKey.routingkey
+where ticks.routingkey = 'locks'
+emit changes;
+
+Create Stream TickLocks as select 
+LocksWithRoutingKey.vin as vin,
+LocksWithRoutingKey.expiry as expiry,
+LocksWithRoutingKey.lockId as lockId,
+STRINGTOTimeStamp(Expiry,'yyyy-MM-dd''T''HH:mm:ss.SSSSSS''Z''','UTC') <= UNIX_TIMESTAMP() as expired
+from LocksWithRoutingKey left join ticks within 48 hours on ticks.routingkey=LocksWithRoutingKey.routingkey
+where ticks.routingkey = 'locks' and  (LocksWithRoutingKey.expired = false or LocksWithRoutingKey.expired != true or not LocksWithRoutingKey.expired )
+emit changes;
+
+insert into locks select vin, Expiry, lockId, true as expired from TickLocks where expired;
+create stream ExpiredLocks as select vin, expiry, lockId, true as expired from LockTicks  where expired;
+create stream LocksThatExpired as select collect_set(vin), lockId, count(lockId) as count,  collect_set(true) as expired from TickLocks group by lockid where expired = true ;
+_________________________________________________________________________________________________________
+
+Create stream Timer (
+  NextEmit bigint,
+  Emit boolean
+) WITH (KAFKA_TOPIC = 'Timer', VALUE_FORMAT = 'json');
+
+CREATE STREAM TIMER (NEXTEMIT BIGINT, EMIT BOOLEAN) WITH (KAFKA_TOPIC='Timer', PARTITIONS=2, REPLICAS=1, VALUE_FORMAT='json');
+_________________________________________________________________________________________________________

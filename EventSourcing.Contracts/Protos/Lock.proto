@@ -7,6 +7,7 @@ import "google/protobuf/timestamp.proto";
 
 message LockRequest {
     string Vin = 1;
+    int64 HoldSeconds = 2;
 }
 
 message Lock {
