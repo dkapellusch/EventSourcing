@@ -4,7 +4,6 @@ using System.Reactive.Linq;
 using System.Threading.Tasks;
 using EventSourcing.Contracts;
 using EventSourcing.Kafka;
-using EventSourcing.KSQL;
 using Grpc.Core;
 
 namespace EventSourcing.VehicleReadService

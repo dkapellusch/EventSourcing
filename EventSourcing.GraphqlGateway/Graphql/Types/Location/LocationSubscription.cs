@@ -4,7 +4,7 @@ using GraphQL.Resolvers;
 using GraphQL.Subscription;
 using GraphQL.Types;
 
-namespace EventSourcing.GraphqlGateway.Graphql.Location
+namespace EventSourcing.GraphqlGateway.Graphql.Types.Location
 {
     public sealed class LocationSubscription : ObjectGraphType<Contracts.Location>
     {

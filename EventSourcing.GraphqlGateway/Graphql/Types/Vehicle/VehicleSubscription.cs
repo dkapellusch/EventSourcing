@@ -5,7 +5,7 @@ using GraphQL.Subscription;
 using GraphQL.Types;
 using static EventSourcing.Contracts.VehicleRead;
 
-namespace EventSourcing.GraphqlGateway.Graphql.Vehicle
+namespace EventSourcing.GraphqlGateway.Graphql.Types.Vehicle
 {
     public sealed class VehicleSubscription : ObjectGraphType<Contracts.Vehicle>
     {

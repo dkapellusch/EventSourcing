@@ -1,5 +1,5 @@
-using EventSourcing.GraphqlGateway.Graphql.Location;
-using EventSourcing.GraphqlGateway.Graphql.Vehicle;
+using EventSourcing.GraphqlGateway.Graphql.Types.Location;
+using EventSourcing.GraphqlGateway.Graphql.Types.Vehicle;
 using GraphQL;
 using GraphQL.Types;
 

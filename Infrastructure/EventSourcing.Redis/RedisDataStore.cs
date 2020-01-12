@@ -66,13 +66,15 @@ namespace EventSourcing.Redis
         public async Task Set<T>(T value, string key, TimeSpan timeToLive) where T : class
         {
             var serializedItem = _serializer.Serialize(value);
-            await _database.StringSetAsync(key, serializedItem, timeToLive);
+            await _database.StringSetAsync(GetKey<T>(key), serializedItem, timeToLive);
         }
-
 
         public async Task<T> Get<T>(string key) where T : class
         {
             var redisValue = await _database.StringGetAsync(GetKey<T>(key));
+
+            if (redisValue.IsNullOrEmpty) return default;
+
             var deserialized = _serializer.Deserialize<T>(redisValue);
             return deserialized;
         }
@@ -91,10 +93,11 @@ namespace EventSourcing.Redis
 
         public async Task<IEnumerable<T>> Query<T>(string startingKey) where T : class
         {
+            var key = GetKey<T>(startingKey);
             var results = await Query<T>();
-            return results.Where(k => k.ToString().StartsWith(startingKey, StringComparison.Ordinal));
+            return results.Where(k => k.ToString().StartsWith(key, StringComparison.Ordinal));
         }
 
-        private static string GetKey<T>(string key) => $"{typeof(T).Name}/{key}".Trim().ToLowerInvariant();
+        private static string GetKey<T>(string key) => $"{typeof(T).Name}/{key.Replace("/", string.Empty)}".Trim().ToLowerInvariant();
     }
 }

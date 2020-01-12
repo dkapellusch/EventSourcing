@@ -3,7 +3,7 @@ using EventSourcing.Contracts;
 using Grpc.Core;
 using static EventSourcing.Contracts.LocationRead;
 
-namespace EventSourcing.GraphqlGateway.Graphql.Vehicle
+namespace EventSourcing.GraphqlGateway.Graphql.Types.Vehicle
 {
     public class VehicleLocationResolver : IResolver<Contracts.Vehicle, Contracts.Location>
     {

@@ -1,11 +1,10 @@
 using System;
 using System.Threading.Tasks;
 using EventSourcing.Contracts;
+using EventSourcing.Contracts.DataStore;
 using EventSourcing.Kafka;
 using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
-using Microsoft.AspNetCore.Rewrite;
-using Empty = EventSourcing.Contracts.Empty;
 
 namespace EventSourcing.LockWriteService
 {
@@ -13,29 +12,42 @@ namespace EventSourcing.LockWriteService
     {
         private readonly KafkaProducer<string, Lock> _producer;
         private readonly LockRead.LockReadClient _lockReadClient;
+        private readonly IExpiringDataStore _expiringDataStore;
 
-        public LockWriteService(KafkaProducer<string, Lock> producer, LockRead.LockReadClient lockReadClient)
+        public LockWriteService(KafkaProducer<string, Lock> producer, LockRead.LockReadClient lockReadClient, IExpiringDataStore expiringDataStore)
         {
             _producer = producer;
             _lockReadClient = lockReadClient;
+            _expiringDataStore = expiringDataStore;
         }
 
-        public override async Task<Lock> LockVehicle(LockRequest request, ServerCallContext context)
+        public override async Task<Lock> LockResource(LockRequest request, ServerCallContext context)
         {
-            var currentLock = await _lockReadClient.GetLockAsync(request);
-            if (currentLock.IsNotNullOrDefault() && !currentLock.Equals(new Lock()))
-                throw new RpcException(new Status(StatusCode.AlreadyExists, "Vehicle is already locked."), "Vehicle is already locked.");
+            await CheckLockStatus(request);
 
             var vehicleLock = new Lock
             {
-                Vin = request.Vin,
+                ResourceId = request.ResourceId,
+                LockHolderId = request.Requester,
+                LockId = Guid.NewGuid().ToString(),
                 Expiry = Timestamp.FromDateTimeOffset(DateTimeOffset.Now.AddSeconds(request.HoldSeconds)),
-                LockId = Guid.NewGuid().ToString()
+                Released = false
             };
 
-            await _producer.ProduceAsync(vehicleLock, request.Vin);
+            await _expiringDataStore.Set(vehicleLock, request.ResourceId, TimeSpan.FromSeconds(request.HoldSeconds));
+            await _producer.ProduceAsync(vehicleLock, request.ResourceId);
 
             return vehicleLock;
+        }
+
+        private async Task CheckLockStatus(LockRequest request)
+        {
+            var currentLock = await _lockReadClient.GetLockAsync(request);
+            if (currentLock.IsNotNullOrDefault() && !currentLock.Equals(new Lock()))
+                throw new RpcException(
+                    new Status(StatusCode.AlreadyExists, $"Resource is already locked by {currentLock.LockHolderId}"),
+                    $"Resource is already locked by {currentLock.LockHolderId}"
+                );
         }
     }
 }

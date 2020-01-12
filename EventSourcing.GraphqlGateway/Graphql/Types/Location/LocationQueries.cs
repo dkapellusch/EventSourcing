@@ -2,7 +2,7 @@ using EventSourcing.Contracts;
 using GraphQL.Types;
 using static EventSourcing.Contracts.LocationRead;
 
-namespace EventSourcing.GraphqlGateway.Graphql.Location
+namespace EventSourcing.GraphqlGateway.Graphql.Types.Location
 {
     public class LocationQueries : ObjectGraphType
     {

@@ -11,8 +11,8 @@ namespace EventSourcing.RocksDb.Extensions
             services.AddSingleton(new RocksDatabase(pathToDb))
                 .AddSingleton<RockCollection>()
                 .AddSingleton<RocksStore>()
-                .AddSingleton<IDataStore>(p => p.GetService<RocksStore>())
-                .AddSingleton<IChangeTrackingDataStore>(p => p.GetService<RocksStore>())
+                .AddSingleton<IDataStore, RocksStore>()
+                .AddSingleton<IChangeTrackingDataStore, RocksStore>()
                 .AddSingleton<ISerializer, JsonSerializer>()
                 .AddSingleton(typeof(ISerializer<>), typeof(JsonSerializer<>));
     }

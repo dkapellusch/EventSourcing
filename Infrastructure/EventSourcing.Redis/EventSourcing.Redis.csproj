@@ -6,11 +6,12 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="StackExchange.Redis" Version="2.0.601" />
+        <PackageReference Include="StackExchange.Redis" Version="2.0.601"/>
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="3.1.0"/>
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\..\EventSourcing.Contracts\EventSourcing.Contracts.csproj" />
+        <ProjectReference Include="..\..\EventSourcing.Contracts\EventSourcing.Contracts.csproj"/>
     </ItemGroup>
 
 </Project>

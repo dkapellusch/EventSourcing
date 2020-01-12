@@ -1,7 +1,7 @@
 using GraphQL.Types;
 using static EventSourcing.Contracts.LocationWrite;
 
-namespace EventSourcing.GraphqlGateway.Graphql.Location
+namespace EventSourcing.GraphqlGateway.Graphql.Types.Location
 {
     public class AddOrUpdateLocation : ObjectGraphType
     {

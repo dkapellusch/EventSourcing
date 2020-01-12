@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using EventSourcing.Contracts;
 using static EventSourcing.Contracts.VehicleRead;
 
-namespace EventSourcing.GraphqlGateway.Graphql.Location
+namespace EventSourcing.GraphqlGateway.Graphql.Types.Location
 {
     public class LocationVehicleResolver : IResolver<Contracts.Location, Contracts.Vehicle[]>
     {

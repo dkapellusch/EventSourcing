@@ -6,18 +6,21 @@ import "Empty.proto";
 import "google/protobuf/timestamp.proto";
 
 message LockRequest {
-    string Vin = 1;
-    int64 HoldSeconds = 2;
+    string ResourceId = 1;
+    string Requester = 2;
+    int64 HoldSeconds = 3;
 }
 
 message Lock {
-    string Vin = 1;
-    google.protobuf.Timestamp Expiry = 2;
+    string ResourceId = 1;
+    string LockHolderId = 2;
     string LockId = 3;
+    google.protobuf.Timestamp Expiry = 4;
+    bool Released = 5;
 }
 
 service LockWrite {
-    rpc LockVehicle (LockRequest) returns (Lock) {
+    rpc LockResource (LockRequest) returns (Lock) {
     }
 
     rpc ReleaseLock (Lock) returns (Empty) {
@@ -26,7 +29,7 @@ service LockWrite {
 
 service LockRead {
     rpc GetLock (LockRequest) returns (Lock) {
-        
+
     }
     rpc ExpiringLocks (Empty) returns (stream Lock) {
     }

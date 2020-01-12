@@ -5,7 +5,6 @@ using System.Reactive.Linq;
 using System.Threading;
 using Confluent.Kafka;
 using EventSourcing.Contracts;
-using EventSourcing.Contracts.Serialization;
 using Google.Protobuf;
 
 namespace EventSourcing.Kafka
@@ -15,7 +14,7 @@ namespace EventSourcing.Kafka
         private readonly IConsumer<string, TPayload> _consumer;
         private readonly string _topicName;
 
-        public KafkaConsumer(ConsumerConfig config, IMessageSerializer<TPayload> serializer, string topicName = null)
+        public KafkaConsumer(ConsumerConfig config, Contracts.Serialization.ISerializer<TPayload> serializer, string topicName = null)
         {
             _topicName = topicName ?? $"{typeof(TPayload).Name}s";
             _consumer = new ConsumerBuilder<string, TPayload>(config)

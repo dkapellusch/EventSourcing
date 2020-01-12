@@ -2,7 +2,6 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Confluent.Kafka;
-using EventSourcing.Contracts.Serialization;
 using Google.Protobuf;
 
 namespace EventSourcing.Kafka
@@ -12,7 +11,7 @@ namespace EventSourcing.Kafka
         private readonly IProducer<TKey, TPayload> _producer;
         private readonly string _topicName;
 
-        public KafkaProducer(ProducerConfig config, IMessageSerializer<TPayload> serializer, string topicName = null)
+        public KafkaProducer(ProducerConfig config, Contracts.Serialization.ISerializer<TPayload> serializer, string topicName = null)
         {
             _topicName = topicName ?? $"{typeof(TPayload).Name}s";
             _producer = new ProducerBuilder<TKey, TPayload>(config)

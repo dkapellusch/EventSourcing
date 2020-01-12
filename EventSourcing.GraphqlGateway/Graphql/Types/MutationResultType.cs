@@ -1,6 +1,6 @@
 using GraphQL.Types;
 
-namespace EventSourcing.GraphqlGateway.Graphql
+namespace EventSourcing.GraphqlGateway.Graphql.Types
 {
     public class MutationResult
     {

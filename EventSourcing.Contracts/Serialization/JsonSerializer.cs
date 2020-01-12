@@ -17,9 +17,29 @@ namespace EventSourcing.Contracts.Serialization
 
     public sealed class NewtonJsonSerializer : ISerializer
     {
-        public T Deserialize<T>(byte[] serializedData) => JsonConvert.DeserializeObject<T>(Encoding.UTF8.GetString(serializedData));
+        public T Deserialize<T>(byte[] serializedData)
+        {
+            try
+            {
+                return JsonConvert.DeserializeObject<T>(Encoding.UTF8.GetString(serializedData));
+            }
+            catch
+            {
+                return default;
+            }
+        }
 
-        public byte[] Serialize<T>(T dataToSerialize) => Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(dataToSerialize));
+        public byte[] Serialize<T>(T dataToSerialize)
+        {
+            try
+            {
+                return Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(dataToSerialize));
+            }
+            catch
+            {
+                return default;
+            }
+        }
     }
 
     public sealed class JsonSerializer : ISerializer

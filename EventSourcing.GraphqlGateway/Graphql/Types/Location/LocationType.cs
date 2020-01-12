@@ -1,7 +1,7 @@
-using EventSourcing.GraphqlGateway.Graphql.Vehicle;
+using EventSourcing.GraphqlGateway.Graphql.Types.Vehicle;
 using GraphQL.Types;
 
-namespace EventSourcing.GraphqlGateway.Graphql.Location
+namespace EventSourcing.GraphqlGateway.Graphql.Types.Location
 {
     public class LocationType : ObjectGraphType<Contracts.Location>
     {

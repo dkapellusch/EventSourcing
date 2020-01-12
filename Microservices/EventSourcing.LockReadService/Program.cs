@@ -1,10 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Threading.Tasks;
-using Confluent.Kafka;
-using EventSourcing.Contracts;
-using EventSourcing.Kafka;
-using EventSourcing.RocksDb.Extensions;
+using EventSourcing.Redis;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -29,15 +26,7 @@ namespace EventSourcing.LockReadService
             .ConfigureKestrel(options => options.ListenAnyIP(7001, o => o.Protocols = HttpProtocols.Http2))
             .ConfigureServices((hostContext, services) => services
                 .AddSingleton<LockReadService>()
-                .AddKafkaConsumer<Lock>(new ConsumerConfig
-                {
-                    BootstrapServers = Configuration.GetValue<string>("kafka:host"),
-                    GroupId = Guid.NewGuid().ToString(),
-                    ClientId = Guid.NewGuid().ToString(),
-                    AutoOffsetReset = AutoOffsetReset.Earliest
-                })
-                .AddRocksDb(Configuration.GetValue<string>("rocks:path"))
-                .AddSingleton(typeof(KafkaBackedDb<>))
+                .AddRedisDataStore(Configuration.GetValue<string>("redis:host"))
                 .AddGrpc()
             )
             .Configure(builder => builder

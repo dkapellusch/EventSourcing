@@ -1,7 +1,7 @@
 using GraphQL.Types;
 using static EventSourcing.Contracts.VehicleWrite;
 
-namespace EventSourcing.GraphqlGateway.Graphql.Vehicle
+namespace EventSourcing.GraphqlGateway.Graphql.Types.Vehicle
 {
     public class AddOrUpdateVehicle : ObjectGraphType
     {

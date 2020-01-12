@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Confluent.Kafka;
 using EventSourcing.Contracts;
 using EventSourcing.Kafka;
+using EventSourcing.Redis;
 using Grpc.Core;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Builder;
@@ -35,6 +36,8 @@ namespace EventSourcing.LockWriteService
                     BootstrapServers = Configuration.GetValue<string>("kafka:host"),
                     ClientId = Guid.NewGuid().ToString()
                 })
+                .AddRedisDataStore(Configuration.GetValue<string>("redis:host"))
+                .AddHostedService<ExpiredLockNotifier>()
                 .AddGrpc()
             )
             .Configure(builder => builder
