@@ -98,6 +98,8 @@ namespace EventSourcing.Redis
             return results.Where(k => k.ToString().StartsWith(key, StringComparison.Ordinal));
         }
 
-        private static string GetKey<T>(string key) => $"{typeof(T).Name}/{key.Replace("/", string.Empty)}".Trim().ToLowerInvariant();
+        private static string GetKey<T>(string key) => !key.Contains("/")
+            ? $"{typeof(T).Name}/{key}".Trim().ToLowerInvariant()
+            : throw new ArgumentException($"Key: {key} contained an illegal character '/'.");
     }
 }

@@ -38,7 +38,7 @@ namespace EventSourcing.LockReadService
                             LockId = "Unknown",
                             LockHolderId = "Unknown",
                             ResourceId = expiredLock[1],
-                            Expiry = DateTime.UtcNow.ToTimestamp(),
+                            Expiry = DateTimeOffset.UtcNow.ToTimestamp(),
                             Released = false
                         });
                     },
