@@ -10,30 +10,11 @@ namespace EventSourcing.Contracts
 {
     public static class Extensions
     {
+        public static Task<T> ToTask<T>(this T item) => Task.FromResult(item);
+
         public static void Add<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, KeyValuePair<TKey, TValue> keyValuePair)
         {
             dictionary.Add(keyValuePair.Key, keyValuePair.Value);
-        }
-
-        public static T InitializeObject<T>(this IDictionary<string, dynamic> values) where T : new()
-        {
-            var instance = new T();
-            foreach (var property in typeof(T).GetProperties().Where(p => p.CanWrite))
-            {
-                if (!values.TryGetValue(property.Name.ToUpperInvariant(), out var value))
-                    continue;
-
-                try
-                {
-                    property.SetValue(instance, value, null);
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine(ex);
-                }
-            }
-
-            return instance;
         }
 
         public static T UpdateObject<T>(this T destination, T source)
