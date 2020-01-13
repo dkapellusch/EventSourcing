@@ -34,6 +34,7 @@ namespace EventSourcing.LockWriteService
                 ResourceId = request.ResourceId,
                 LockHolderId = request.Requester,
                 LockId = Guid.NewGuid().ToString(),
+                ResourceType = request.ResourceType,
                 Expiry = Timestamp.FromDateTimeOffset(DateTimeOffset.Now.AddSeconds(request.HoldSeconds)),
                 Released = false
             };

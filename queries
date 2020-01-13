@@ -21,11 +21,12 @@ Create stream Locks (
   ResourceId string,
   LockHolderId string,
   LockId string,
+  ResourceType string,
   Expiry string,
   Released boolean
 ) WITH (KAFKA_TOPIC = 'Locks', VALUE_FORMAT = 'json');
 
-create stream ExpiredLocks as select ResourceId, Expiry from Locks where Released is not null or STRINGTOTimeStamp(Expiry,'yyyy-MM-dd''T''HH:mm:ss.SSSSSS''Z''','UTC') <= UNIX_TIMESTAMP() + 999;
+create stream ExpiredLocks as select * from Locks where Released is not null or STRINGTOTimeStamp(Expiry,'yyyy-MM-dd''T''HH:mm:ss.SSSSSS''Z''','UTC') <= UNIX_TIMESTAMP() + 999;
 
 
 IceBox

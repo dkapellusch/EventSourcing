@@ -37,11 +37,11 @@ namespace EventSourcing.Redis
         {
             if (_running) return;
 
-            var subscriber = _database.Multiplexer.GetSubscriber();
-
-            subscriber.Subscribe("*expired",
-                (channel, value) => _expiredKeys.OnNext(value.ToString())
-            );
+            _database.Multiplexer
+                .GetSubscriber()
+                .Subscribe("*expired",
+                    (channel, value) => _expiredKeys.OnNext(value.ToString())
+                );
 
             _running = true;
         }

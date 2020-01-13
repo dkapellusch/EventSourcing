@@ -7,16 +7,18 @@ import "google/protobuf/timestamp.proto";
 
 message LockRequest {
     string ResourceId = 1;
-    string Requester = 2;
-    int64 HoldSeconds = 3;
+    string ResourceType = 2;
+    string Requester = 3;
+    int64 HoldSeconds = 4;
 }
 
 message Lock {
     string ResourceId = 1;
     string LockHolderId = 2;
     string LockId = 3;
-    google.protobuf.Timestamp Expiry = 4;
-    bool Released = 5;
+    string ResourceType = 4;
+    google.protobuf.Timestamp Expiry = 5;
+    bool Released = 6;
 }
 
 service LockWrite {

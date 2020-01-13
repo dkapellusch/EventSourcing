@@ -26,8 +26,7 @@ namespace EventSourcing.LockReadService
 
         public override async Task ExpiringLocks(Empty request, IServerStreamWriter<Lock> responseStream, ServerCallContext context)
         {
-            await _dataStore
-                .ExpiredKeys
+            await _dataStore.ExpiredKeys
                 .Select(k => k.Split("/"))
                 .Where(k => k[0].Equals("locks"))
                 .ForEachAsync(async expiredLock =>

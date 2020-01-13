@@ -1,4 +1,5 @@
 using EventSourcing.GraphqlGateway.Graphql.Types.Location;
+using EventSourcing.GraphqlGateway.Graphql.Types.Lock;
 using EventSourcing.GraphqlGateway.Graphql.Types.Vehicle;
 using GraphQL;
 using GraphQL.Types;
@@ -14,6 +15,7 @@ namespace EventSourcing.GraphqlGateway.Graphql
             _resolver = resolver;
             AddQueries<VehicleQueries>();
             AddQueries<LocationQueries>();
+            AddQueries<LockQueries>();
         }
 
         private void AddQueries<T>() where T : IComplexGraphType

@@ -39,7 +39,9 @@ namespace EventSourcing.GraphqlGateway
                 .AddSingleton(new VehicleReadClient(new Channel(configuration.GetValue<string>("vehicleRead:host"), ChannelCredentials.Insecure)))
                 .AddSingleton(new VehicleWriteClient(new Channel(configuration.GetValue<string>("vehicleWrite:host"), ChannelCredentials.Insecure)))
                 .AddSingleton(new LocationReadClient(new Channel(configuration.GetValue<string>("locationRead:host"), ChannelCredentials.Insecure)))
-                .AddSingleton(new LocationWriteClient(new Channel(configuration.GetValue<string>("locationWrite:host"), ChannelCredentials.Insecure)));
+                .AddSingleton(new LocationWriteClient(new Channel(configuration.GetValue<string>("locationWrite:host"), ChannelCredentials.Insecure)))
+                .AddSingleton(new LockRead.LockReadClient(new Channel(configuration.GetValue<string>("lockRead:host"), ChannelCredentials.Insecure)))
+                .AddSingleton(new LockWrite.LockWriteClient(new Channel(configuration.GetValue<string>("lockWrite:host"), ChannelCredentials.Insecure)));
 
         public static IServiceCollection AddResolvers(this IServiceCollection services) =>
             services
