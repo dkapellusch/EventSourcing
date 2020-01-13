@@ -3,7 +3,6 @@ using System.Reactive.Linq;
 using System.Threading.Tasks;
 using EventSourcing.Contracts;
 using EventSourcing.Contracts.DataStore;
-using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
 using Empty = EventSourcing.Contracts.Empty;
 
@@ -30,17 +29,13 @@ namespace EventSourcing.LockReadService
             await _dataStore
                 .ExpiredKeys
                 .Select(k => k.Split("/"))
-                .Where(k => k[0].Equals("lock"))
+                .Where(k => k[0].Equals("locks"))
                 .ForEachAsync(async expiredLock =>
                     {
-                        await responseStream.WriteAsync(new Lock
-                        {
-                            LockId = "Unknown",
-                            LockHolderId = "Unknown",
-                            ResourceId = expiredLock[1],
-                            Expiry = DateTimeOffset.UtcNow.ToTimestamp(),
-                            Released = false
-                        });
+                        var lockKey = expiredLock[1];
+                        var lockValue = await _dataStore.Get<Lock>(lockKey);
+                        await responseStream.WriteAsync(lockValue);
+                        await _dataStore.Delete<Lock>(lockKey);
                     },
                     context.CancellationToken);
         }

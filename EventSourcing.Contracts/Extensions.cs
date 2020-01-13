@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using FluentValidation;
 using Grpc.Core;
@@ -64,5 +65,35 @@ namespace EventSourcing.Contracts
             new string(input.ToCharArray()
                 .Where(c => !char.IsWhiteSpace(c))
                 .ToArray());
+
+        public static async Task<T> WithTimeOut<T>(this Task<T> task, TimeSpan timeout)
+        {
+            using var cancellationSource = new CancellationTokenSource();
+            cancellationSource.CancelAfter(timeout);
+
+            try
+            {
+                return await Task.Run(() => task, cancellationSource.Token);
+            }
+            catch (OperationCanceledException)
+            {
+                return default;
+            }
+        }
+
+        public static async Task<AsyncServerStreamingCall<T>> WithTimeOut<T>(this AsyncServerStreamingCall<T> task, TimeSpan timeout)
+        {
+            using var cancellationSource = new CancellationTokenSource();
+            cancellationSource.CancelAfter(timeout);
+
+            try
+            {
+                return await Task.Run(() => task, cancellationSource.Token);
+            }
+            catch (OperationCanceledException)
+            {
+                return default;
+            }
+        }
     }
 }

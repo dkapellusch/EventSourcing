@@ -39,12 +39,8 @@ namespace EventSourcing.Redis
 
             var subscriber = _database.Multiplexer.GetSubscriber();
 
-            subscriber.Subscribe("*__:expired",
-                (channel, value) =>
-                {
-                    if (string.Equals(channel, "__keyevent@0__:expired", StringComparison.OrdinalIgnoreCase))
-                        _expiredKeys.OnNext(value.ToString());
-                }
+            subscriber.Subscribe("*expired",
+                (channel, value) => _expiredKeys.OnNext(value.ToString())
             );
 
             _running = true;

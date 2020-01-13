@@ -14,9 +14,10 @@ namespace EventSourcing.Redis
                 .AddSingleton(p => p.GetService<IConnectionMultiplexer>().GetDatabase())
                 .AddSingleton<IDatabaseAsync>(p => p.GetService<IDatabase>())
                 .AddSingleton<RedisDataStore>()
-                .AddSingleton<IExpiringDataStore, RedisDataStore>()
-                .AddSingleton<IDataStore, RedisDataStore>()
-                .AddSingleton(typeof(ISerializer<>), typeof(JsonMessageSerializer<>))
+                .AddSingleton<IDataStore>(p => p.GetService<RedisDataStore>())
+                .AddSingleton<IExpiringDataStore>(p => p.GetService<RedisDataStore>())
+                .AddSingleton<RedisLockProvider>()
+                .AddSingleton<ILockProvider>(p => p.GetService<RedisLockProvider>())
                 .AddSingleton<ISerializer, NewtonJsonSerializer>();
         }
     }

@@ -7,11 +7,10 @@ using Microsoft.Extensions.Hosting;
 
 namespace EventSourcing.LockWriteService
 {
-    public class ExpiredLockNotifier : IHostedService
+    public class ExpiredLockNotifier : BackgroundService
     {
         private readonly LockRead.LockReadClient _lockReadClient;
         private readonly KafkaProducer<string, Lock> _lockProducer;
-        private Thread _monitorThread;
 
         public ExpiredLockNotifier(LockRead.LockReadClient lockReadClient, KafkaProducer<string, Lock> lockProducer)
         {
@@ -19,28 +18,13 @@ namespace EventSourcing.LockWriteService
             _lockProducer = lockProducer;
         }
 
-        public Task StartAsync(CancellationToken cancellationToken)
-        {
-            _monitorThread = new Thread(MonitorExpiringLocks);
-            _monitorThread.Start();
-            return Task.CompletedTask;
-        }
-
-        private async void MonitorExpiringLocks()
+        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
             await _lockReadClient.ExpiringLocks(new Empty())
                 .ResponseStream
                 .AsObservable()
                 .Retry()
-                .ForEachAsync(
-                    async expiredLock => await _lockProducer.ProduceAsync(expiredLock, expiredLock.ResourceId)
-                );
-        }
-
-        public Task StopAsync(CancellationToken cancellationToken)
-        {
-            _monitorThread.Abort();
-            return Task.CompletedTask;
+                .ForEachAsync(expiredLock => _lockProducer.ProduceAsync(expiredLock, expiredLock.ResourceId), stoppingToken);
         }
     }
 }

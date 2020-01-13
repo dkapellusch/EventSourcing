@@ -77,7 +77,7 @@ from ticks join LocksWithRoutingKey within 48 hours on ticks.routingkey=LocksWit
 where ticks.routingkey = 'locks'
 emit changes;
 
-Create Stream TickLocks as select 
+Create Stream LockTicks as select 
 LocksWithRoutingKey.vin as vin,
 LocksWithRoutingKey.expiry as expiry,
 LocksWithRoutingKey.lockId as lockId,
@@ -86,7 +86,7 @@ from LocksWithRoutingKey left join ticks within 48 hours on ticks.routingkey=Loc
 where ticks.routingkey = 'locks' and  (LocksWithRoutingKey.expired = false or LocksWithRoutingKey.expired != true or not LocksWithRoutingKey.expired )
 emit changes;
 
-insert into locks select vin, Expiry, lockId, true as expired from TickLocks where expired;
+insert into locks select vin, Expiry, lockId, true as expired from LockTicks where expired;
 create stream ExpiredLocks as select vin, expiry, lockId, true as expired from LockTicks  where expired;
 create stream LocksThatExpired as select collect_set(vin), lockId, count(lockId) as count,  collect_set(true) as expired from TickLocks group by lockid where expired = true ;
 
