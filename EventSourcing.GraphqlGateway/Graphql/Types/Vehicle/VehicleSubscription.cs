@@ -1,5 +1,6 @@
 using System;
 using EventSourcing.Contracts;
+using EventSourcing.Contracts.Extensions;
 using GraphQL.Resolvers;
 using GraphQL.Subscription;
 using GraphQL.Types;

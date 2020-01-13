@@ -3,6 +3,7 @@ using System.Reactive.Linq;
 using System.Threading.Tasks;
 using EventSourcing.Contracts;
 using EventSourcing.Contracts.DataStore;
+using EventSourcing.Contracts.Extensions;
 using Grpc.Core;
 using Empty = EventSourcing.Contracts.Empty;
 
@@ -35,6 +36,7 @@ namespace EventSourcing.LockReadService
                         var lockValue = await _dataStore.Get<Lock>(lockKey);
                         await responseStream.WriteAsync(lockValue);
                         await _dataStore.Delete<Lock>(lockKey);
+                        Console.WriteLine($"{lockKey} expired.");
                     },
                     context.CancellationToken);
         }

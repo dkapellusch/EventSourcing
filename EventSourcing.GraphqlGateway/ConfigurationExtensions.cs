@@ -1,9 +1,11 @@
+using System;
 using System.Linq;
 using System.Reflection;
 using EventSourcing.Contracts;
 using EventSourcing.GraphqlGateway.Graphql;
 using EventSourcing.GraphqlGateway.Graphql.Types.Location;
 using EventSourcing.GraphqlGateway.Graphql.Types.Vehicle;
+using Google.Protobuf.WellKnownTypes;
 using GraphQL;
 using GraphQL.Http;
 using GraphQL.Types;
@@ -47,5 +49,14 @@ namespace EventSourcing.GraphqlGateway
             services
                 .AddSingleton<IResolver<Vehicle, Location>, VehicleLocationResolver>()
                 .AddSingleton<IResolver<Location, Vehicle[]>, LocationVehicleResolver>();
+
+        public static IServiceCollection AddConverters(this IServiceCollection services)
+        {
+            ValueConverter.Register(
+                typeof(Timestamp),
+                typeof(DateTime),
+                value => ((value as Timestamp)?.ToDateTime()).GetValueOrDefault());
+            return services;
+        }
     }
 }

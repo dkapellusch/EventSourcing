@@ -1,18 +1,13 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reactive.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using FluentValidation;
 using Grpc.Core;
 
-namespace EventSourcing.Contracts
+namespace EventSourcing.Contracts.Extensions
 {
     public static class Extensions
     {
-        public static Task<T> ToTask<T>(this T item) => Task.FromResult(item);
-
         public static void Add<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, KeyValuePair<TKey, TValue> keyValuePair)
         {
             dictionary.Add(keyValuePair.Key, keyValuePair.Value);
@@ -33,15 +28,6 @@ namespace EventSourcing.Contracts
 
             return destination;
         }
-
-        public static IObservable<T> AsObservable<T>(this IAsyncStreamReader<T> streamReader) where T : class =>
-            Observable.FromAsync(async _ =>
-                {
-                    var hasNext = streamReader != null && await streamReader.MoveNext();
-                    return hasNext ? streamReader.Current : null;
-                })
-                .Repeat()
-                .TakeWhile(data => data.IsNotNullOrDefault());
 
         public static bool IsNullOrDefault<T>(this T possiblyNullOrDefaultObject) =>
             possiblyNullOrDefaultObject is null || EqualityComparer<T>.Default.Equals(possiblyNullOrDefaultObject, default);
@@ -65,35 +51,5 @@ namespace EventSourcing.Contracts
             new string(input.ToCharArray()
                 .Where(c => !char.IsWhiteSpace(c))
                 .ToArray());
-
-        public static async Task<T> WithTimeOut<T>(this Task<T> task, TimeSpan timeout)
-        {
-            using var cancellationSource = new CancellationTokenSource();
-            cancellationSource.CancelAfter(timeout);
-
-            try
-            {
-                return await Task.Run(() => task, cancellationSource.Token);
-            }
-            catch (OperationCanceledException)
-            {
-                return default;
-            }
-        }
-
-        public static async Task<AsyncServerStreamingCall<T>> WithTimeOut<T>(this AsyncServerStreamingCall<T> task, TimeSpan timeout)
-        {
-            using var cancellationSource = new CancellationTokenSource();
-            cancellationSource.CancelAfter(timeout);
-
-            try
-            {
-                return await Task.Run(() => task, cancellationSource.Token);
-            }
-            catch (OperationCanceledException)
-            {
-                return default;
-            }
-        }
     }
 }

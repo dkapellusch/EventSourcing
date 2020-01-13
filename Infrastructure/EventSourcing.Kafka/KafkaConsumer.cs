@@ -4,7 +4,7 @@ using System.Linq;
 using System.Reactive.Linq;
 using System.Threading;
 using Confluent.Kafka;
-using EventSourcing.Contracts;
+using EventSourcing.Contracts.Extensions;
 using Google.Protobuf;
 
 namespace EventSourcing.Kafka

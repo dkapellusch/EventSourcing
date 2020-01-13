@@ -30,8 +30,7 @@ namespace EventSourcing.VehicleReadService
         private static IWebHostBuilder CreateHostBuilder(string[] args) => WebHost.CreateDefaultBuilder(args)
             .ConfigureKestrel(options => options.ListenAnyIP(5001, o => o.Protocols = HttpProtocols.Http2))
             .ConfigureServices((hostContext, services) => services
-                .AddSingleton(new KsqlClient(new HttpClient {BaseAddress = new Uri($"http://{Configuration.GetValue<string>("ksql:host")}/query")}))
-                .AddSingleton<KafkaKsqlQueryExecutor>()
+                .AddKsql($"http://{Configuration.GetValue<string>("ksql:host")}/query")
                 .AddSingleton<VehicleKsqlTable>()
                 .AddSingleton<KsqlVehicleReadService>()
                 .AddSingleton<VehicleReadService>()

@@ -3,16 +3,16 @@ using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
-using EventSourcing.Contracts;
+using EventSourcing.Contracts.Extensions;
 using Newtonsoft.Json;
 
 namespace EventSourcing.KSQL
 {
-    public class KafkaKsqlQueryExecutor
+    public class KsqlQueryExecutor
     {
         private readonly KsqlClient _ksqlRestClient;
 
-        public KafkaKsqlQueryExecutor(KsqlClient ksqlRestClient) => _ksqlRestClient = ksqlRestClient;
+        public KsqlQueryExecutor(KsqlClient ksqlRestClient) => _ksqlRestClient = ksqlRestClient;
 
         public async IAsyncEnumerable<T> ExecuteQuery<T>(KsqlQuery query, Mapper<T> mapper, [EnumeratorCancellation] CancellationToken token = default)
         {

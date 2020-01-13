@@ -6,15 +6,16 @@ using System.Threading.Tasks;
 using EventSourcing.Contracts;
 using EventSourcing.KSQL;
 using Newtonsoft.Json.Linq;
+using EventSourcing.Contracts.Extensions;
 
 namespace EventSourcing.VehicleReadService
 {
     public class VehicleKsqlTable
     {
         private readonly KsqlQuery _getCountQuery;
-        private readonly KafkaKsqlQueryExecutor _ksqlQueryExecutor;
+        private readonly KsqlQueryExecutor _ksqlQueryExecutor;
 
-        public VehicleKsqlTable(KafkaKsqlQueryExecutor ksqlQueryExecutor)
+        public VehicleKsqlTable(KsqlQueryExecutor ksqlQueryExecutor)
         {
             _ksqlQueryExecutor = ksqlQueryExecutor;
             _getCountQuery = new KsqlQuery
@@ -33,32 +34,28 @@ namespace EventSourcing.VehicleReadService
 
         public async Task<List<Vehicle>> GetAllVehiclesAsync()
         {
-            var count = await EnumerateAsync(_ksqlQueryExecutor.ExecuteQuery(_getCountQuery, columns => columns.First().Value));
-            var allVehicles = await EnumerateAsync(_ksqlQueryExecutor.ExecuteQuery(new KsqlQuery
-                {
-                    Ksql = $"Select * from vehicles_all emit changes limit {count[0]};",
-                    StreamProperties = {KsqlQuery.OffsetEarliest}
-                },
-                ParseVehicle));
+            var count = await _ksqlQueryExecutor.ExecuteQuery(_getCountQuery, columns => columns.First().Value).EnumerateAsync();
+            var allVehicles = await _ksqlQueryExecutor.ExecuteQuery(new KsqlQuery
+                    {
+                        Ksql = $"Select * from vehicles_all emit changes limit {count[0]};",
+                        StreamProperties = {KsqlQuery.OffsetEarliest}
+                    },
+                    ParseVehicle)
+                .EnumerateAsync();
+
 
             return allVehicles;
         }
 
         public async Task<Vehicle> GetVehicleByVinAsync(string vin)
         {
-            var results = await EnumerateAsync(_ksqlQueryExecutor.ExecuteQuery(new KsqlQuery
-                {
-                    Ksql = $"Select * from vehicles_all where rowkey = '{vin}';"
-                },
-                ParseVehicle));
+            var results = await _ksqlQueryExecutor.ExecuteQuery(new KsqlQuery
+                    {
+                        Ksql = $"Select * from vehicles_all where rowkey = '{vin}';"
+                    },
+                    ParseVehicle)
+                .EnumerateAsync();
             return results.FirstOrDefault();
-        }
-
-        private static async Task<List<T>> EnumerateAsync<T>(IAsyncEnumerable<T> asyncEnumerable)
-        {
-            var items = new List<T>();
-            await foreach (var element in asyncEnumerable) items.Add(element);
-            return items;
         }
 
         private static Vehicle ParseVehicle(IDictionary<string, dynamic> columns) =>

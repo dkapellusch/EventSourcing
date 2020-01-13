@@ -1,9 +1,6 @@
-using System;
-
 namespace EventSourcing.Contracts.DataStore
 {
-    public interface IChangeTrackingDataStore : IDataStore
+    public interface IChangeTrackingDataStore : IDataStore, IChangeTracking
     {
-        IObservable<T> GetChanges<T>() where T : class;
     }
 }

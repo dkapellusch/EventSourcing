@@ -4,8 +4,8 @@ using System.Linq;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Threading.Tasks;
-using EventSourcing.Contracts;
 using EventSourcing.Contracts.DataStore;
+using EventSourcing.Contracts.Extensions;
 using EventSourcing.Contracts.Serialization;
 using StackExchange.Redis;
 

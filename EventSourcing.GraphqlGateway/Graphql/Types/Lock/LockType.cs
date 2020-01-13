@@ -10,7 +10,7 @@ namespace EventSourcing.GraphqlGateway.Graphql.Types.Lock
             Field(l => l.ResourceId);
             Field(l => l.ResourceType);
             Field(l => l.LockHolderId);
-            Field(nameof(Contracts.Lock.Expiry), l => new DateTimeGraphType().ParseValue(l.Expiry.ToDateTime()) as DateTimeGraphType);
+            Field<DateTimeGraphType>(nameof(Contracts.Lock.Expiry));
             Field(l => l.Released);
         }
     }

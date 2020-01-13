@@ -2,6 +2,7 @@ using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using EventSourcing.Contracts;
+using EventSourcing.Contracts.Extensions;
 using EventSourcing.Kafka;
 using Microsoft.Extensions.Hosting;
 

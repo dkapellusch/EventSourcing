@@ -1,18 +1,14 @@
-using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace EventSourcing.Contracts.DataStore
 {
-    public interface IDataStore
+    public interface IDataStore : IReadonlyDataStore, IWriteOnlyDataStore
     {
-        Task Set<T>(T value, string key) where T : class;
-
-        Task<T> Get<T>(string key) where T : class;
-
         Task Delete<T>(string key) where T : class;
+    }
 
-        Task<IEnumerable<T>> Query<T>() where T : class;
-
-        Task<IEnumerable<T>> Query<T>(string startingKey) where T : class;
+    public interface IDataStore<T> : IReadonlyDataStore<T>, IWriteOnlyDataStore<T> where T : class
+    {
+        Task Delete(string key);
     }
 }

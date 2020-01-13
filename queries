@@ -26,8 +26,14 @@ Create stream Locks (
   Released boolean
 ) WITH (KAFKA_TOPIC = 'Locks', VALUE_FORMAT = 'json');
 
-create stream ExpiredLocks as select * from Locks where Released is not null or STRINGTOTimeStamp(Expiry,'yyyy-MM-dd''T''HH:mm:ss.SSSSSS''Z''','UTC') <= UNIX_TIMESTAMP() + 999;
+create stream EnrichedLocks as select ResourceId,LockHolderId,LockId,ResourceType,Expiry,case when released is null then false else released end as Released,Released is not null or STRINGTOTimeStamp(Expiry,'yyyy-MM-dd''T''HH:mm:ss.SSSSSS''Z''','UTC') <= UNIX_TIMESTAMP() as Inactive from Locks;
 
+create stream InactiveLocks as select * from EnrichedLocks where Inactive = true;
+create stream ActiveLocks as select * from EnrichedLocks where Inactive = false ;
+
+create table InactiveLocks_By_LockId as select collect_set(RESOURCEID) as RESOURCEID, collect_set(LOCKHOLDERID) as LOCKHOLDERID, collect_set(RESOURCETYPE) as RESOURCETYPE , lockId, count(lockId) as lockCount, collect_set(expiry) as expiry, collect_set(released) as released, collect_set(Inactive) as Inactive from InactiveLocks group by lockId;
+create table ActiveLocks_By_LockId as select collect_set(RESOURCEID) as RESOURCEID, collect_set(LOCKHOLDERID) as LOCKHOLDERID, collect_set(RESOURCETYPE) as RESOURCETYPE , lockId, count(lockId) as lockCount, collect_set(expiry) as expiry, collect_set(released) as released, collect_set(Inactive) as Inactive from ActiveLocks group by lockId;
+create table ActiveLocks_By_ResourceId as select RESOURCEID, count(RESOURCEID) as lockedCount, collect_set(LOCKHOLDERID) as LOCKHOLDERID, collect_set(RESOURCETYPE) as RESOURCETYPE , collect_set(lockId) as lockId, collect_set(expiry) as expiry, collect_set(released) as released, collect_set(Inactive) as Inactive from ActiveLocks group by RESOURCEID;
 
 IceBox
 _________________________________________________________________________________________________________

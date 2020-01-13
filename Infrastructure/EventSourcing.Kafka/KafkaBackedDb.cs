@@ -2,8 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
-using EventSourcing.Contracts;
 using EventSourcing.Contracts.DataStore;
+using EventSourcing.Contracts.Extensions;
 using Google.Protobuf;
 
 namespace EventSourcing.Kafka

@@ -31,6 +31,7 @@ namespace EventSourcing.GraphqlGateway
                 .AddGrpcClients(Configuration)
                 .AddLogging()
                 .AddResolvers()
+                .AddConverters()
                 .AddGraphqlTypes()
                 .AddHttpContextAccessor()
                 .AddGraphQL()

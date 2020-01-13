@@ -2,6 +2,7 @@ using System;
 using System.Threading.Tasks;
 using EventSourcing.Contracts;
 using EventSourcing.Contracts.DataStore;
+using EventSourcing.Contracts.Extensions;
 using EventSourcing.Kafka;
 using EventSourcing.Redis;
 using Google.Protobuf.WellKnownTypes;
@@ -12,14 +13,14 @@ namespace EventSourcing.LockWriteService
     public class LockWriteService : LockWrite.LockWriteBase
     {
         private readonly KafkaProducer<string, Lock> _producer;
-        private readonly LockRead.LockReadClient _lockReadClient;
+        private readonly ActiveLockStore _activeLocks;
         private readonly IExpiringDataStore _expiringDataStore;
         private readonly ILockProvider _lockProvider;
 
-        public LockWriteService(KafkaProducer<string, Lock> producer, LockRead.LockReadClient lockReadClient, IExpiringDataStore expiringDataStore, ILockProvider lockProvider)
+        public LockWriteService(KafkaProducer<string, Lock> producer, ActiveLockStore activeLocks, IExpiringDataStore expiringDataStore, ILockProvider lockProvider)
         {
             _producer = producer;
-            _lockReadClient = lockReadClient;
+            _activeLocks = activeLocks;
             _expiringDataStore = expiringDataStore;
             _lockProvider = lockProvider;
         }
@@ -35,7 +36,7 @@ namespace EventSourcing.LockWriteService
                 LockHolderId = request.Requester,
                 LockId = Guid.NewGuid().ToString(),
                 ResourceType = request.ResourceType,
-                Expiry = Timestamp.FromDateTimeOffset(DateTimeOffset.Now.AddSeconds(request.HoldSeconds)),
+                Expiry = Timestamp.FromDateTimeOffset(DateTimeOffset.UtcNow.AddSeconds(request.HoldSeconds)),
                 Released = false
             };
 
@@ -47,12 +48,15 @@ namespace EventSourcing.LockWriteService
 
         private async Task CheckLockStatus(LockRequest request)
         {
-            var currentLock = await _lockReadClient.GetLockAsync(request);
-            if (currentLock.IsNotNullOrDefault() && !currentLock.Equals(new Lock()))
+            var currentLock = await _activeLocks.Get(request.ResourceId);
+            if (currentLock.IsNotNullOrDefault() && !currentLock.Equals(new Lock()) && currentLock.Expiry >= DateTimeOffset.UtcNow.ToTimestamp())
+            {
+                var errorMessage = $"Resource is already locked by {currentLock.LockHolderId} until: {currentLock.Expiry}";
                 throw new RpcException(
-                    new Status(StatusCode.AlreadyExists, $"Resource is already locked by {currentLock.LockHolderId}"),
-                    $"Resource is already locked by {currentLock.LockHolderId}"
+                    new Status(StatusCode.AlreadyExists, errorMessage),
+                    errorMessage
                 );
+            }
         }
 
         private async Task GetLock(LockRequest lockRequest)

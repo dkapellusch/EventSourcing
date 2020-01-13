@@ -8,7 +8,14 @@ namespace EventSourcing.Contracts.Serialization
     {
         private readonly JsonSerializerOptions _settings;
 
-        public JsonSerializer() => _settings = new JsonSerializerOptions {ReadCommentHandling = JsonCommentHandling.Allow, IgnoreNullValues = true, PropertyNameCaseInsensitive = true};
+        public JsonSerializer() => _settings = new JsonSerializerOptions
+        {
+            ReadCommentHandling = JsonCommentHandling.Skip,
+            IgnoreNullValues = true,
+            PropertyNameCaseInsensitive = true,
+            AllowTrailingCommas = true,
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+        };
 
         public T Deserialize(byte[] serializedData) => System.Text.Json.JsonSerializer.Deserialize<T>(serializedData, _settings);
 
@@ -46,7 +53,14 @@ namespace EventSourcing.Contracts.Serialization
     {
         private readonly JsonSerializerOptions _settings;
 
-        public JsonSerializer() => _settings = new JsonSerializerOptions {IgnoreNullValues = true, PropertyNameCaseInsensitive = true};
+        public JsonSerializer() => _settings = new JsonSerializerOptions
+        {
+            ReadCommentHandling = JsonCommentHandling.Skip,
+            IgnoreNullValues = true,
+            PropertyNameCaseInsensitive = true,
+            AllowTrailingCommas = true,
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+        };
 
         public T Deserialize<T>(byte[] serializedData) => serializedData is null ? default : System.Text.Json.JsonSerializer.Deserialize<T>(serializedData, _settings);
 

@@ -118,43 +118,45 @@ services:
     networks:
       - "dd-net"
 
-  LockReadService:
-    image: "dkapellusch/eventsourcing.lockreadservice"
-    ports:
-      - "7001:7001"
-    restart: always
-    depends_on:
-      - "DDZookeeper"
-      - "DDKafka"
-      - "DDKafka2"
-      - "Redis"
-    networks:
-      - "dd-net"
+  # LockReadService:
+  #   image: "dkapellusch/eventsourcing.lockreadservice"
+  #   ports:
+  #     - "7001:7001"
+  #   restart: always
+  #   depends_on:
+  #     - "DDZookeeper"
+  #     - "DDKafka"
+  #     - "DDKafka2"
+  #     - "Redis"
+  #   networks:
+  #     - "dd-net"
 
-  LockWriteService:
-    image: "dkapellusch/eventsourcing.lockwriteservice"
-    ports:
-      - "7000:7000"
-    restart: always
-    depends_on:
-      - "DDZookeeper"
-      - "DDKafka"
-      - "DDKafka2"
-      - "Redis"
-    networks:
-      - "dd-net"
+  # LockWriteService:
+  #   image: "dkapellusch/eventsourcing.lockwriteservice"
+  #   ports:
+  #     - "7000:7000"
+  #   restart: always
+  #   depends_on:
+  #     - "DDZookeeper"
+  #     - "DDKafka"
+  #     - "DDKafka2"
+  #     - "Redis"
+  #   networks:
+  #     - "dd-net"
 
-  Graphql:
-    image: "dkapellusch/eventsourcing.graphql"
-    ports:
-      - "8001:8001"
-    restart: always
-    depends_on:
-      - "LocationReadService"
-      - "LocationWriteService"
-      - "VehicleReadService"
-      - "VehicleWriteService"
-    networks:
-      - "dd-net"
+  # Graphql:
+  #   image: "dkapellusch/eventsourcing.graphql"
+  #   ports:
+  #     - "8001:8001"
+  #   restart: always
+  #   depends_on:
+  #     - "LocationReadService"
+  #     - "LocationWriteService"
+  #     - "VehicleReadService"
+  #     - "VehicleWriteService"
+  #     - "LockReadService"
+  #     - "LockWriteService"
+  #   networks:
+  #     - "dd-net"
 networks:
   dd-net:

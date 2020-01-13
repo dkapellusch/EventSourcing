@@ -7,4 +7,9 @@ namespace EventSourcing.Contracts.DataStore
     {
         Task Save<T>(Func<T> transaction, string primaryKey) where T : class;
     }
+
+    public interface ITransactionalDataStore<T> : IDataStore<T> where T : class
+    {
+        Task Save(Func<T> transaction, string primaryKey);
+    }
 }
