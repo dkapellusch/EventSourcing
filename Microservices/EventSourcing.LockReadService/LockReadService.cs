@@ -1,4 +1,3 @@
-using System;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
 using EventSourcing.Contracts;
@@ -11,34 +10,28 @@ namespace EventSourcing.LockReadService
 {
     public class LockReadService : LockRead.LockReadBase
     {
-        private readonly IExpiringDataStore _dataStore;
+        private readonly IReadonlyDataStore<Lock> _lockStore;
+        private readonly IChangeTracking<Lock> _lockChangeTracker;
 
-        public LockReadService(IExpiringDataStore dataStore) => _dataStore = dataStore;
+        public LockReadService(IReadonlyDataStore<Lock> lockStore, IChangeTracking<Lock> lockChangeTracker)
+        {
+            _lockStore = lockStore;
+            _lockChangeTracker = lockChangeTracker;
+        }
 
         public override async Task<Lock> GetLock(LockRequest request, ServerCallContext context)
         {
-            var currentLock = await _dataStore.Get<Lock>(request.ResourceId);
+            var currentLock = await _lockStore.Get(request.ResourceId);
 
-            if (currentLock.IsNullOrDefault() || currentLock.Expiry.ToDateTime() < DateTime.UtcNow || currentLock.Released)
+            if (currentLock.IsNullOrDefault() || currentLock.IsInactive())
                 currentLock = new Lock();
 
             return currentLock;
         }
 
-        public override async Task ExpiringLocks(Empty request, IServerStreamWriter<Lock> responseStream, ServerCallContext context)
-        {
-            await _dataStore.ExpiredKeys
-                .Select(k => k.Split("/"))
-                .Where(k => k[0].Equals("locks"))
-                .ForEachAsync(async expiredLock =>
-                    {
-                        var lockKey = expiredLock[1];
-                        var lockValue = await _dataStore.Get<Lock>(lockKey);
-                        await responseStream.WriteAsync(lockValue);
-                        await _dataStore.Delete<Lock>(lockKey);
-                        Console.WriteLine($"{lockKey} expired.");
-                    },
-                    context.CancellationToken);
-        }
+        public override async Task ExpiringLocks(Empty request, IServerStreamWriter<Lock> responseStream, ServerCallContext context) =>
+            await _lockChangeTracker.GetChanges()
+                .Where(l => l.IsInactive())
+                .ForEachAsync(async l => await responseStream.WriteAsync(l));
     }
 }

@@ -24,6 +24,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\..\EventSourcing.Contracts\EventSourcing.Contracts.csproj" />
+        <ProjectReference Include="..\..\Infrastructure\EventSourcing.KSQL\EventSourcing.KSQL.csproj" />
         <ProjectReference Include="..\..\Infrastructure\EventSourcing.Redis\EventSourcing.Redis.csproj" />
     </ItemGroup>
 

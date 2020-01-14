@@ -1,7 +1,9 @@
 ﻿using System;
 using System.IO;
 using System.Threading.Tasks;
-using EventSourcing.Redis;
+using EventSourcing.Contracts;
+using EventSourcing.Contracts.DataStore;
+using EventSourcing.KSQL;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -25,8 +27,11 @@ namespace EventSourcing.LockReadService
         private static IWebHostBuilder CreateHostBuilder(string[] args) => WebHost.CreateDefaultBuilder(args)
             .ConfigureKestrel(options => options.ListenAnyIP(7001, o => o.Protocols = HttpProtocols.Http2))
             .ConfigureServices((hostContext, services) => services
+                .AddKsql($"http://{Configuration.GetValue<string>("ksql:host")}/query")
+                .AddSingleton<LockStore>()
+                .AddSingleton<IReadonlyDataStore<Lock>>(p => p.GetService<LockStore>())
+                .AddSingleton<IChangeTracking<Lock>>(p => p.GetService<LockStore>())
                 .AddSingleton<LockReadService>()
-                .AddRedisDataStore(Configuration.GetValue<string>("redis:host"))
                 .AddGrpc()
             )
             .Configure(builder => builder
