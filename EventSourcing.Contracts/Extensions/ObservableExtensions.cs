@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.Reactive.Linq;
+using System.Threading.Tasks;
 using Grpc.Core;
 
 namespace EventSourcing.Contracts.Extensions
@@ -27,12 +29,23 @@ namespace EventSourcing.Contracts.Extensions
         }
 
         public static IObservable<T> AsObservable<T>(this IAsyncStreamReader<T> streamReader) where T : class =>
-            Observable.FromAsync(async _ =>
+            Observable.FromAsync(async cancellation =>
                 {
+                    if (cancellation.IsCancellationRequested) return null;
+
                     var hasNext = streamReader != null && await streamReader.MoveNext();
                     return hasNext ? streamReader.Current : null;
                 })
                 .Repeat()
                 .TakeWhile(data => data.IsNotNullOrDefault());
+
+        public static IObservable<T> AsObservable<T>(this IAsyncEnumerable<T> asyncStream) where T : class =>
+            Observable.FromAsync(async cancellation =>
+                {
+                    await foreach (var element in asyncStream.WithCancellation(cancellation)) return element;
+
+                    return null;
+                })
+                .Repeat();
     }
 }
