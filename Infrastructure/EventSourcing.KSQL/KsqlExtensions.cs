@@ -7,7 +7,7 @@ namespace EventSourcing.KSQL
 {
     public static class KsqlExtensions
     {
-        public static TProperty GetValue<TSourceType, TProperty>(this IDictionary<string, dynamic> columns, string columnName)
+        public static TProperty GetValue<TProperty>(this IDictionary<string, dynamic> columns, string columnName)
         {
             if (!columns.TryGetValue(columnName.ToUpperInvariant(), out var column)) return default;
 

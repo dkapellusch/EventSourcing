@@ -1,5 +1,4 @@
 using System;
-using Google.Protobuf.WellKnownTypes;
 
 namespace EventSourcing.Contracts.Extensions
 {

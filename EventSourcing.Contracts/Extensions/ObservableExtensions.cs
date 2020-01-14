@@ -42,7 +42,7 @@ namespace EventSourcing.Contracts.Extensions
         public static IObservable<T> AsObservable<T>(this IAsyncEnumerable<T> asyncStream) where T : class =>
             Observable.FromAsync(async cancellation =>
                 {
-                    await foreach (var element in asyncStream.WithCancellation(cancellation)) 
+                    await foreach (var element in asyncStream.WithCancellation(cancellation))
                         return element;
 
                     return null;
