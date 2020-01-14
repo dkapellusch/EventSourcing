@@ -46,7 +46,7 @@ namespace EventSourcing.LockReadService
                         },
                         ParseLock)
                     .EnumerateAsync())
-                .FirstOrDefault();
+                .FirstOrDefault(l => l?.LockId == activeLock?.LockId);
 
             return inactiveLock is null ? activeLock : null;
         }
@@ -54,7 +54,7 @@ namespace EventSourcing.LockReadService
         public IObservable<Lock> GetChanges() =>
             _queryExecutor.ExecuteQuery(new KsqlQuery
                     {
-                        Ksql = "Select * from EnrichedLocks emit changes;"
+                        Ksql = "Select * from INACTIVELOCKS_BY_RESOURCEID emit changes;"
                     },
                     ParseLock)
                 .AsObservable();

@@ -41,14 +41,13 @@ namespace EventSourcing.LockReadService
                     Console.WriteLine($"Skipping {l}, not expired.");
                     return false;
                 })
+                .TakeWhile(_ => !context.CancellationToken.IsCancellationRequested)
                 .ForEachAsync(async l =>
                 {
-                    Console.WriteLine($"Expiring {l}.");
                     try
                     {
-                        if (context.CancellationToken.IsCancellationRequested) return;
-
                         await responseStream.WriteAsync(l);
+                        Console.WriteLine($"Expiring {l}.");
                     }
                     catch (Exception e)
                     {

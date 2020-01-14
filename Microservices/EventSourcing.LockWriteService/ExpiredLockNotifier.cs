@@ -1,3 +1,4 @@
+using System;
 using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -33,6 +34,7 @@ namespace EventSourcing.LockWriteService
 
                         await _lockProducer.ProduceAsync(lockValue, lockValue.ResourceId);
                         await _dataStore.Delete<Lock>(lockKey);
+                        Console.WriteLine($"Expired {lockKey}.");
                     },
                     stoppingToken);
     }
