@@ -2,7 +2,7 @@ using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using EventSourcing.Contracts;
-using EventSourcing.Contracts.Extensions;
+using EventSourcing.Contracts.DataStore;
 using EventSourcing.Kafka;
 using Microsoft.Extensions.Hosting;
 
@@ -10,22 +10,27 @@ namespace EventSourcing.LockWriteService
 {
     public class ExpiredLockNotifier : BackgroundService
     {
-        private readonly LockRead.LockReadClient _lockReadClient;
+        private readonly IExpiringDataStore _dataStore;
         private readonly KafkaProducer<string, Lock> _lockProducer;
 
-        public ExpiredLockNotifier(LockRead.LockReadClient lockReadClient, KafkaProducer<string, Lock> lockProducer)
+        public ExpiredLockNotifier(IExpiringDataStore dataStore, KafkaProducer<string, Lock> lockProducer)
         {
-            _lockReadClient = lockReadClient;
+            _dataStore = dataStore;
             _lockProducer = lockProducer;
         }
 
-        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
-        {
-            await _lockReadClient.ExpiringLocks(new Empty())
-                .ResponseStream
-                .AsObservable()
+        protected override async Task ExecuteAsync(CancellationToken stoppingToken) =>
+            await _dataStore.ExpiredKeys
                 .Retry()
-                .ForEachAsync(expiredLock => _lockProducer.ProduceAsync(expiredLock, expiredLock.ResourceId), stoppingToken);
-        }
+                .Select(k => k.Split("/"))
+                .Where(k => k[0].Equals("locks"))
+                .ForEachAsync(async expiredLock =>
+                    {
+                        var lockKey = expiredLock[1];
+                        var lockValue = await _dataStore.Get<Lock>(lockKey);
+                        await _lockProducer.ProduceAsync(lockValue, lockValue.ResourceId);
+                        await _dataStore.Delete<Lock>(lockKey);
+                    },
+                    stoppingToken);
     }
 }

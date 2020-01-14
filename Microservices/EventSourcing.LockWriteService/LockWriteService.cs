@@ -13,14 +13,12 @@ namespace EventSourcing.LockWriteService
     public class LockWriteService : LockWrite.LockWriteBase
     {
         private readonly KafkaProducer<string, Lock> _producer;
-        private readonly ActiveLockStore _activeLocks;
         private readonly IExpiringDataStore _expiringDataStore;
         private readonly ILockProvider _lockProvider;
 
-        public LockWriteService(KafkaProducer<string, Lock> producer, ActiveLockStore activeLocks, IExpiringDataStore expiringDataStore, ILockProvider lockProvider)
+        public LockWriteService(KafkaProducer<string, Lock> producer, IExpiringDataStore expiringDataStore, ILockProvider lockProvider)
         {
             _producer = producer;
-            _activeLocks = activeLocks;
             _expiringDataStore = expiringDataStore;
             _lockProvider = lockProvider;
         }
@@ -48,8 +46,8 @@ namespace EventSourcing.LockWriteService
 
         private async Task CheckLockStatus(LockRequest request)
         {
-            var currentLock = await _activeLocks.Get(request.ResourceId);
-            if (currentLock.IsNotNullOrDefault() && !currentLock.Equals(new Lock()) && currentLock.Expiry >= DateTimeOffset.UtcNow.ToTimestamp())
+            var currentLock = await _expiringDataStore.Get<Lock>(request.ResourceId);
+            if (currentLock.IsNotNullOrDefault() && !currentLock.Equals(new Lock()) && !currentLock.IsInactive())
             {
                 var errorMessage = $"Resource is already locked by {currentLock.LockHolderId} until: {currentLock.Expiry}";
                 throw new RpcException(

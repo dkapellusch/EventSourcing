@@ -3,9 +3,7 @@ using System.IO;
 using System.Threading.Tasks;
 using Confluent.Kafka;
 using EventSourcing.Contracts;
-using EventSourcing.Contracts.DataStore;
 using EventSourcing.Kafka;
-using EventSourcing.KSQL;
 using EventSourcing.Redis;
 using Grpc.Core;
 using Microsoft.AspNetCore;
@@ -31,10 +29,6 @@ namespace EventSourcing.LockWriteService
         private static IWebHostBuilder CreateHostBuilder(string[] args) => WebHost.CreateDefaultBuilder(args)
             .ConfigureKestrel(options => options.ListenAnyIP(7000, o => o.Protocols = HttpProtocols.Http2))
             .ConfigureServices((hostContext, services) => services
-                .AddKsql($"http://{Configuration.GetValue<string>("ksql:host")}/query")
-                .AddSingleton<ActiveLockStore>()
-                .AddSingleton<IReadonlyDataStore<Lock>, ActiveLockStore>()
-                .AddSingleton<IChangeTracking<Lock>, ActiveLockStore>()
                 .AddSingleton<LockWriteService>()
                 .AddSingleton(new LockRead.LockReadClient(new Channel(Configuration.GetValue<string>("lockRead:host"), ChannelCredentials.Insecure)))
                 .AddKafkaProducer<string, Lock>(new ProducerConfig
