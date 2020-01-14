@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using EventSourcing.Contracts;
 using EventSourcing.Contracts.DataStore;
+using EventSourcing.Contracts.Extensions;
 using EventSourcing.Kafka;
 using Microsoft.Extensions.Hosting;
 
@@ -28,6 +29,8 @@ namespace EventSourcing.LockWriteService
                     {
                         var lockKey = expiredLock[1];
                         var lockValue = await _dataStore.Get<Lock>(lockKey);
+                        if (!lockValue.IsNotNullOrDefault()) return;
+
                         await _lockProducer.ProduceAsync(lockValue, lockValue.ResourceId);
                         await _dataStore.Delete<Lock>(lockKey);
                     },

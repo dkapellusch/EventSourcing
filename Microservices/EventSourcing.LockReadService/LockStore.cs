@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reactive.Linq;
 using System.Threading.Tasks;
 using EventSourcing.Contracts;
 using EventSourcing.Contracts.DataStore;
@@ -31,13 +32,23 @@ namespace EventSourcing.LockReadService
 
         public async Task<Lock> Get(string key)
         {
-            var results = await _queryExecutor.ExecuteQuery(new KsqlQuery
-                    {
-                        Ksql = $"Select * from ActiveLocks_By_ResourceId where rowkey = '{key}';"
-                    },
-                    ParseLock)
-                .EnumerateAsync();
-            return results.FirstOrDefault();
+            var activeLock = (await _queryExecutor.ExecuteQuery(new KsqlQuery
+                        {
+                            Ksql = $"Select * from ActiveLocks_By_ResourceId where rowkey = '{key}';"
+                        },
+                        ParseLock)
+                    .EnumerateAsync())
+                .FirstOrDefault(l => !l.IsInactive());
+
+            var inactiveLock = (await _queryExecutor.ExecuteQuery(new KsqlQuery
+                        {
+                            Ksql = $"Select * from InactiveLocks_By_ResourceId where rowkey = '{key}';"
+                        },
+                        ParseLock)
+                    .EnumerateAsync())
+                .FirstOrDefault();
+
+            return inactiveLock is null ? activeLock : null;
         }
 
         public IObservable<Lock> GetChanges() =>

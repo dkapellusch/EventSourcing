@@ -10,7 +10,7 @@ namespace EventSourcing.Redis
 
         public RedisLockProvider(IDatabaseAsync redisDatabase) => _redisDatabase = redisDatabase;
 
-        public async Task<LockToken> TakeLockAsync(string lockKey, long lockHoldTimeMs)
+        public async Task<LockToken> TakeLock(string lockKey, long lockHoldTimeMs)
         {
             try
             {
@@ -26,13 +26,14 @@ namespace EventSourcing.Redis
             }
         }
 
-        public async Task<bool> ReleaseLockAsync(LockToken lockToken)
+        public async Task<bool> ReleaseLock(LockToken lockToken)
         {
             if (!lockToken.GotLock) return false;
 
             try
             {
-                return await _redisDatabase.LockReleaseAsync(GetKey(lockToken.LockKey), lockToken.LockValue);
+                var releasedLock = await _redisDatabase.LockReleaseAsync(GetKey(lockToken.LockKey), lockToken.LockValue);
+                return releasedLock;
             }
             catch
             {
@@ -45,8 +46,8 @@ namespace EventSourcing.Redis
 
     public interface ILockProvider
     {
-        Task<LockToken> TakeLockAsync(string lockKey, long lockHoldTimeMs);
+        Task<LockToken> TakeLock(string lockKey, long lockHoldTimeMs);
 
-        Task<bool> ReleaseLockAsync(LockToken lockToken);
+        Task<bool> ReleaseLock(LockToken lockToken);
     }
 }

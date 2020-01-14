@@ -1,3 +1,4 @@
+using System;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
 using EventSourcing.Contracts;
@@ -26,12 +27,33 @@ namespace EventSourcing.LockReadService
             if (currentLock.IsNullOrDefault() || currentLock.IsInactive())
                 currentLock = new Lock();
 
+            // Do not expose LockId so only the owner can release it.
+            currentLock.LockId = string.Empty;
             return currentLock;
         }
 
         public override async Task ExpiringLocks(Empty request, IServerStreamWriter<Lock> responseStream, ServerCallContext context) =>
             await _lockChangeTracker.GetChanges()
-                .Where(l => l.IsInactive())
-                .ForEachAsync(async l => await responseStream.WriteAsync(l));
+                .Where(l =>
+                {
+                    if (l.IsInactive()) return true;
+
+                    Console.WriteLine($"Skipping {l}, not expired.");
+                    return false;
+                })
+                .ForEachAsync(async l =>
+                {
+                    Console.WriteLine($"Expiring {l}.");
+                    try
+                    {
+                        if (context.CancellationToken.IsCancellationRequested) return;
+
+                        await responseStream.WriteAsync(l);
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e);
+                    }
+                });
     }
 }

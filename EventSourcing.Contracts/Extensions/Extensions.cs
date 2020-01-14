@@ -43,7 +43,7 @@ namespace EventSourcing.Contracts.Extensions
             catch (ValidationException validationException)
             {
                 var errorMessages = string.Join(" ", validationException.Errors.Select(e => e.ErrorMessage));
-                throw new RpcException(new Status(StatusCode.InvalidArgument, "Validation failed."), errorMessages);
+                throw new RpcException(new Status(StatusCode.InvalidArgument, errorMessages), errorMessages);
             }
         }
 
