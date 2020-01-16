@@ -1,44 +1,46 @@
 using System;
-using System.Collections.Generic;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
+using System.Threading.Tasks;
+using Confluent.Kafka;
 using EventSourcing.Contracts.DataStore;
 using EventSourcing.Contracts.Extensions;
 using Google.Protobuf;
 
 namespace EventSourcing.Kafka
 {
-    public class KafkaBackedDb<TValue> where TValue : class, IMessage<TValue>
+    public class KafkaBackedDb<TValue> : IChangeTracking<TValue>, IReadonlyDataStore<TValue> where TValue : IMessage<TValue>, new()
     {
         private readonly IChangeTrackingDataStore _dataStore;
 
         public KafkaBackedDb(IChangeTrackingDataStore dataStore, KafkaConsumer<TValue> kafkaConsumer)
         {
             _dataStore = dataStore;
+            _dataStore.GetChanges<Offset>().Subscribe(offset => Console.WriteLine(offset));
 
+            var offsetKey = $"{typeof(TValue).Name}.offset";
+            var currentOffset = _dataStore.Get<long>(offsetKey).Result;
+
+            kafkaConsumer.SeekToOffset(currentOffset);
             kafkaConsumer.Start();
             kafkaConsumer.Subscription
                 .ObserveOn(TaskPoolScheduler.Default)
                 .SubscribeOn(TaskPoolScheduler.Default)
-                .Subscribe(m =>
+                .Subscribe(async message =>
                 {
-                    var value = m.Value;
-                    var currentValue = _dataStore.Get<TValue>(m.Key).Result;
+                    var value = message.Value;
+                    var currentValue = await _dataStore.Get<TValue>(message.Key);
 
                     if (!(currentValue is null))
                         value.UpdateObject(currentValue);
 
-                    _dataStore.Set(value, m.Key);
-                    kafkaConsumer.Commit(m.Partition, m.Offset);
+                    await _dataStore.Set(value, message.Key);
+                    await _dataStore.Set(message.Offset.Value, offsetKey);
                 });
         }
 
-        public TValue GetItem(string key) => _dataStore.Get<TValue>(key).Result;
-
-        public IEnumerable<TValue> GetAll() => _dataStore.Query<TValue>().Result;
-
-        public IEnumerable<TValue> GetItems(string key) => _dataStore.Query<TValue>(key).Result;
-
         public IObservable<TValue> GetChanges() => _dataStore.GetChanges<TValue>();
+
+        public Task<TValue> Get(string key) => _dataStore.Get<TValue>(key);
     }
 }

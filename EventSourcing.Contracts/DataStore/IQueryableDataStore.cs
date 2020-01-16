@@ -5,12 +5,12 @@ namespace EventSourcing.Contracts.DataStore
 {
     public interface IQueryableDataStore
     {
-        Task<IEnumerable<T>> Query<T>() where T : class;
+        Task<IEnumerable<T>> Query<T>();
 
-        Task<IEnumerable<T>> Query<T>(string startingKey) where T : class;
+        Task<IEnumerable<T>> Query<T>(string startingKey);
     }
 
-    public interface IQueryableDataStore<T> where T : class
+    public interface IQueryableDataStore<T>
     {
         Task<IEnumerable<T>> Query();
 

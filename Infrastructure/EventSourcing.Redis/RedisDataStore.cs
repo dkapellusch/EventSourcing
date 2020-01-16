@@ -11,7 +11,7 @@ using StackExchange.Redis;
 
 namespace EventSourcing.Redis
 {
-    public class RedisDataStore : IExpiringDataStore
+    public class RedisDataStore : IExpiringDataStore, IChangeTracking
     {
         private readonly IDatabaseAsync _database;
         private readonly ISerializer _serializer;
@@ -46,26 +46,26 @@ namespace EventSourcing.Redis
             _running = true;
         }
 
-        public async Task Set<T>(Func<T> transaction, string key) where T : class
+        public async Task Set<T>(Func<T> transaction, string key)
         {
             var item = transaction();
             var serializedItem = _serializer.Serialize(item);
             await _database.StringSetAsync(GetKey<T>(key), serializedItem);
         }
 
-        public async Task Set<T>(T value, string key) where T : class
+        public async Task Set<T>(T value, string key)
         {
             var serializedItem = _serializer.Serialize(value);
             await _database.StringSetAsync(GetKey<T>(key), serializedItem);
         }
 
-        public async Task Set<T>(T value, string key, TimeSpan timeToLive) where T : class
+        public async Task Set<T>(T value, string key, TimeSpan timeToLive)
         {
             var serializedItem = _serializer.Serialize(value);
             await _database.StringSetAsync(GetKey<T>(key), serializedItem, timeToLive);
         }
 
-        public async Task<T> Get<T>(string key) where T : class
+        public async Task<T> Get<T>(string key)
         {
             var redisValue = await _database.StringGetAsync(GetKey<T>(key));
 
@@ -75,9 +75,9 @@ namespace EventSourcing.Redis
             return deserialized;
         }
 
-        public async Task Delete<T>(string key) where T : class => await _database.KeyDeleteAsync(GetKey<T>(key));
+        public async Task Delete<T>(string key) => await _database.KeyDeleteAsync(GetKey<T>(key));
 
-        public async Task<IEnumerable<T>> Query<T>() where T : class
+        public async Task<IEnumerable<T>> Query<T>()
         {
             var endpoint = _database.Multiplexer.GetEndPoints(true).FirstOrDefault();
             var server = _database.Multiplexer.GetServer(endpoint);
@@ -87,7 +87,7 @@ namespace EventSourcing.Redis
             return values.Select(v => _serializer.Deserialize<T>(v)).Where(v => v.IsNotNullOrDefault());
         }
 
-        public async Task<IEnumerable<T>> Query<T>(string startingKey) where T : class
+        public async Task<IEnumerable<T>> Query<T>(string startingKey)
         {
             var key = GetKey<T>(startingKey);
             var results = await Query<T>();
@@ -97,5 +97,32 @@ namespace EventSourcing.Redis
         private static string GetKey<T>(string key) => !key.Contains("/")
             ? $"{typeof(T).Name}/{key}".Trim().ToLowerInvariant()
             : throw new ArgumentException($"Key: {key} contained an illegal character '/'.");
+
+        public IObservable<T> GetChanges<T>()
+        {
+            var changes = new Subject<T>();
+            _database.Multiplexer
+                .GetSubscriber()
+                .Subscribe("*",
+                    async (channel, value) =>
+                    {
+                        try
+                        {
+                            var split = value.ToString().Split("/");
+                            var keySpace = split[0];
+                            var key = split[1];
+                            if (!keySpace.Equals(typeof(T).Name, StringComparison.OrdinalIgnoreCase)) return;
+
+                            var keyValue = await Get<T>(key);
+                            if (keyValue.IsNotNullOrDefault()) changes.OnNext(keyValue);
+                        }
+                        catch
+                        {
+                        }
+                    }
+                );
+
+            return changes.AsObservable();
+        }
     }
 }

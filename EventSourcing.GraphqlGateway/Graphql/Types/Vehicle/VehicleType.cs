@@ -1,11 +1,12 @@
 using EventSourcing.GraphqlGateway.Graphql.Types.Location;
+using EventSourcing.GraphqlGateway.Graphql.Types.Lock;
 using GraphQL.Types;
 
 namespace EventSourcing.GraphqlGateway.Graphql.Types.Vehicle
 {
     public class VehicleType : ObjectGraphType<Contracts.Vehicle>
     {
-        public VehicleType(IResolver<Contracts.Vehicle, Contracts.Location> locationResolver)
+        public VehicleType(IResolver<Contracts.Vehicle, Contracts.Location> locationResolver, IResolver<Contracts.Vehicle, Contracts.Lock> lockResolver)
         {
             Field<IdGraphType>(nameof(Contracts.Vehicle.Vin));
             Field(v => v.Make);
@@ -14,6 +15,8 @@ namespace EventSourcing.GraphqlGateway.Graphql.Types.Vehicle
                 "a location",
                 resolve: ctx => ctx.TryAsyncResolve(async context => await locationResolver.Resolve(context.Source))
             );
+
+            Field<LockType>("lock", "a lock", resolve: ctx => ctx.TryAsyncResolve(async context => await lockResolver.Resolve(context.Source)));
         }
     }
 

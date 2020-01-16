@@ -3,11 +3,11 @@ using static EventSourcing.Contracts.VehicleWrite;
 
 namespace EventSourcing.GraphqlGateway.Graphql.Types.Vehicle
 {
-    public class AddOrUpdateVehicle : ObjectGraphType
+    public class VehicleMutations : ObjectGraphType
     {
-        public AddOrUpdateVehicle(VehicleWriteClient vehicleWriteClient)
+        public VehicleMutations(VehicleWriteClient vehicleWriteClient)
         {
-            FieldAsync<MutationResultType>(GetType().Name,
+            FieldAsync<MutationResultType>("AddOrUpdateVehicle",
                 "Add or update a vehicle",
                 new QueryArguments(new QueryArgument<NonNullGraphType<VehicleInputType>> {Name = "vehicle"}),
                 async ctx => await ctx.TryAsyncResolve(async context =>

@@ -3,11 +3,11 @@ using static EventSourcing.Contracts.LocationWrite;
 
 namespace EventSourcing.GraphqlGateway.Graphql.Types.Location
 {
-    public class AddOrUpdateLocation : ObjectGraphType
+    public class LocationMutations : ObjectGraphType
     {
-        public AddOrUpdateLocation(LocationWriteClient locationService)
+        public LocationMutations(LocationWriteClient locationService)
         {
-            FieldAsync<MutationResultType>(GetType().Name,
+            FieldAsync<MutationResultType>("AddOrUpdateLocation",
                 "Add or update a location",
                 new QueryArguments(new QueryArgument<NonNullGraphType<LocationInputType>> {Name = "location"}),
                 async ctx => await ctx.TryAsyncResolve(async context =>

@@ -19,15 +19,6 @@ namespace EventSourcing.GraphqlGateway.Graphql.Types.Location
                         }
                     )
                 ));
-
-            FieldAsync<ListGraphType<LocationType>>("locations",
-                "all locations",
-                null,
-                async ctx => await ctx.TryAsyncResolve(async context =>
-                {
-                    var response = await locationReadClient.GetAllLocationsAsync(new Empty());
-                    return response.Elements;
-                }));
         }
     }
 }

@@ -15,13 +15,23 @@ namespace EventSourcing.GraphqlGateway.Graphql.Types.Lock
         }
     }
 
-    public class LockInputType : InputObjectGraphType<Contracts.Lock>
+    public class LockTakeInputType : InputObjectGraphType<Contracts.Lock>
     {
-        public LockInputType()
+        public LockTakeInputType()
         {
             Field<IdGraphType>(nameof(Contracts.LockRequest.ResourceId));
+            Field(typeof(StringGraphType), nameof(Contracts.LockRequest.Requester));
             Field(typeof(StringGraphType), nameof(Contracts.LockRequest.ResourceType));
             Field(typeof(IntGraphType), nameof(Contracts.LockRequest.HoldSeconds));
+        }
+    }
+
+    public class LockReleaseInputType : InputObjectGraphType<Contracts.Lock>
+    {
+        public LockReleaseInputType()
+        {
+            Field<IdGraphType>(nameof(Contracts.Lock.LockId));
+            Field(l => l.ResourceId);
         }
     }
 }

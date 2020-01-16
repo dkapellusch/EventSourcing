@@ -1,4 +1,5 @@
 using EventSourcing.GraphqlGateway.Graphql.Types.Location;
+using EventSourcing.GraphqlGateway.Graphql.Types.Lock;
 using EventSourcing.GraphqlGateway.Graphql.Types.Vehicle;
 using GraphQL;
 using GraphQL.Types;
@@ -12,8 +13,9 @@ namespace EventSourcing.GraphqlGateway.Graphql
         public RootMutation(IDependencyResolver resolver)
         {
             _resolver = resolver;
-            AddMutations<AddOrUpdateVehicle>();
-            AddMutations<AddOrUpdateLocation>();
+            AddMutations<VehicleMutations>();
+            AddMutations<LocationMutations>();
+            AddMutations<LockMutations>();
         }
 
         private void AddMutations<T>() where T : IComplexGraphType

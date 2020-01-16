@@ -35,8 +35,7 @@ namespace EventSourcing.LockWriteService
                 LockHolderId = request.Requester,
                 LockId = lockToken.LockValue,
                 ResourceType = request.ResourceType,
-                Expiry = Timestamp.FromDateTimeOffset(DateTimeOffset.UtcNow.AddSeconds(request.HoldSeconds)),
-                Released = false
+                Expiry = Timestamp.FromDateTimeOffset(DateTimeOffset.UtcNow.AddSeconds(request.HoldSeconds))
             };
 
             await _expiringDataStore.Set(vehicleLock, request.ResourceId);
@@ -60,7 +59,8 @@ namespace EventSourcing.LockWriteService
                 throw new RpcException(new Status(StatusCode.Unavailable, "Unable to release lock."), "Unable to release lock.");
 
             await _expiringDataStore.Delete<Lock>(currentLock.ResourceId);
-            currentLock.Released = true;
+            currentLock.Expiry = DateTime.UtcNow.AddSeconds(5).ToTimestamp();
+            currentLock.Released = false;
             await _producer.ProduceAsync(currentLock, request.ResourceId);
 
             return new Empty();

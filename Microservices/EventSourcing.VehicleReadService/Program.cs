@@ -30,7 +30,6 @@ namespace EventSourcing.VehicleReadService
             .ConfigureKestrel(options => options.ListenAnyIP(5001, o => o.Protocols = HttpProtocols.Http2))
             .ConfigureServices((hostContext, services) => services
                 .AddKsql($"http://{Configuration.GetValue<string>("ksql:host")}/query")
-                .AddSingleton<VehicleKsqlTable>()
                 .AddSingleton<KsqlVehicleReadService>()
                 .AddSingleton<VehicleReadService>()
                 .AddKafkaConsumer<Vehicle>(new ConsumerConfig

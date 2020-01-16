@@ -11,7 +11,7 @@ namespace EventSourcing.KSQL
         {
             if (!columns.TryGetValue(columnName.ToUpperInvariant(), out var column)) return default;
 
-            var columnVal = GetColumnValue(column);
+            var columnVal = GetColumnValue<TProperty>(column);
             return (TProperty) columnVal;
         }
 
@@ -20,7 +20,7 @@ namespace EventSourcing.KSQL
             var propertyName = ((MemberExpression) expression.Body).Member.Name;
             if (!columns.TryGetValue(propertyName.ToUpperInvariant(), out var column)) return default;
 
-            var columnVal = GetColumnValue(column);
+            var columnVal = GetColumnValue<TProperty>(column);
             return (TProperty) columnVal;
         }
 
@@ -29,13 +29,15 @@ namespace EventSourcing.KSQL
             var propertyName = ((MemberExpression) expression.Body).Member.Name;
             if (!columns.TryGetValue(propertyName.ToUpperInvariant(), out var column)) return default;
 
-            var columnVal = GetColumnValue(column);
+            var columnVal = GetColumnValue<TProperty>(column);
             var converted = converter(columnVal.ToString());
             return converted;
         }
 
-        private static dynamic GetColumnValue(dynamic value)
+        private static dynamic GetColumnValue<T>(dynamic value, T defaultValue = default)
         {
+            if (value is null) return defaultValue;
+
             Type valueType = value.GetType();
             if (valueType == typeof(JArray)) value = value.Last;
             return value;

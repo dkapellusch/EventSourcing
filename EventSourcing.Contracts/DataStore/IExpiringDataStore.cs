@@ -5,7 +5,7 @@ namespace EventSourcing.Contracts.DataStore
 {
     public interface IExpiringDataStore : IDataStore
     {
-        Task Set<T>(T value, string key, TimeSpan timeToLive) where T : class;
+        Task Set<T>(T value, string key, TimeSpan timeToLive);
 
         IObservable<string> ExpiredKeys { get; }
     }

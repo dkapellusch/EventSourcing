@@ -1,7 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Reactive.Concurrency;
 using System.Reactive.Linq;
-using System.Threading.Tasks;
+using System.Threading;
 using Grpc.Core;
 
 namespace EventSourcing.Contracts.Extensions
@@ -39,14 +40,19 @@ namespace EventSourcing.Contracts.Extensions
                 .Repeat()
                 .TakeWhile(data => data.IsNotNullOrDefault());
 
-        public static IObservable<T> AsObservable<T>(this IAsyncEnumerable<T> asyncStream) where T : class =>
-            Observable.FromAsync(async cancellation =>
+        public static IObservable<T> AsObservable<T>(this IAsyncEnumerable<T> asyncStream, CancellationToken token = default)
+        {
+            var asyncEnumerator = asyncStream.GetAsyncEnumerator(token);
+            return Observable.FromAsync(async cancellation =>
                 {
-                    await foreach (var element in asyncStream.WithCancellation(cancellation))
-                        return element;
+                    if (cancellation.IsCancellationRequested) return default;
 
-                    return null;
+                    var hasNext = asyncEnumerator.IsNotNullOrDefault() && await asyncEnumerator.MoveNextAsync();
+                    return hasNext ? asyncEnumerator.Current : default;
                 })
-                .Repeat();
+                .ObserveOn(TaskPoolScheduler.Default)
+                .Repeat()
+                .Where(m => m.IsNotNullOrDefault());
+        }
     }
 }

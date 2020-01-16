@@ -5,7 +5,6 @@ using Confluent.Kafka;
 using EventSourcing.Contracts;
 using EventSourcing.Kafka;
 using EventSourcing.Redis;
-using Grpc.Core;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -30,7 +29,6 @@ namespace EventSourcing.LockWriteService
             .ConfigureKestrel(options => options.ListenAnyIP(7000, o => o.Protocols = HttpProtocols.Http2))
             .ConfigureServices((hostContext, services) => services
                 .AddSingleton<LockWriteService>()
-                .AddSingleton(new LockRead.LockReadClient(new Channel(Configuration.GetValue<string>("lockRead:host"), ChannelCredentials.Insecure)))
                 .AddKafkaProducer<string, Lock>(new ProducerConfig
                 {
                     BootstrapServers = Configuration.GetValue<string>("kafka:host"),

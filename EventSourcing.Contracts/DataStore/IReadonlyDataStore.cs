@@ -4,10 +4,10 @@ namespace EventSourcing.Contracts.DataStore
 {
     public interface IReadonlyDataStore
     {
-        Task<T> Get<T>(string key) where T : class;
+        Task<T> Get<T>(string key);
     }
 
-    public interface IReadonlyDataStore<T> where T : class
+    public interface IReadonlyDataStore<T>
     {
         Task<T> Get(string key);
     }

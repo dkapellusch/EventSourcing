@@ -33,9 +33,6 @@ service LocationRead {
     rpc GetLocation (LocationRequest) returns (Location) {
     }
 
-    rpc GetAllLocations (Empty) returns (Locations) {
-    }
-
     rpc GetLocationUpdates (Empty) returns (stream Location) {
     }
 }

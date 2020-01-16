@@ -4,10 +4,10 @@ namespace EventSourcing.Contracts.DataStore
 {
     public interface IWriteOnlyDataStore
     {
-        Task Set<T>(T value, string key) where T : class;
+        Task Set<T>(T value, string key);
     }
 
-    public interface IWriteOnlyDataStore<in T> where T : class
+    public interface IWriteOnlyDataStore<in T>
     {
         Task Set(T value, string key);
     }
