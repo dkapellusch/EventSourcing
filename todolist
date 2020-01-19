@@ -1,0 +1,7 @@
+1. Cleanup KSQL Streaming Implementation
+2. Store Consumer Offsets in DataStore to Reduce Resyncing Data On Startup
+3. Create BackUpManager to Monitor Topics and Store Up to Date Seed of DataStores
+4. Use BackUpManager to Build New Images With DataStore SnapShots
+5. Infrastructure Runs in K8s.
+6. Services Run in Knative
+7. Logging

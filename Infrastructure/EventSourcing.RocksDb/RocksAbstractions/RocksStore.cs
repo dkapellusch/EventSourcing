@@ -2,32 +2,38 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Linq;
-using EventSourcing.Contracts;
+using System.Threading.Tasks;
+using EventSourcing.Contracts.DataStore;
+using EventSourcing.Contracts.Extensions;
 
 namespace EventSourcing.RocksDb.RocksAbstractions
 {
-    public class RocksStore : IDataStore
+    public class RocksStore : IChangeTrackingDataStore, IDataStore
     {
         private readonly RockCollection _db;
 
         public RocksStore(RockCollection db) => _db = db;
 
-        public void Save<T>(Func<T> transaction, string primaryKey) where T : class
+        public Task Set<T>(T value, string key)
         {
-            var entity = transaction();
-            _db.Add(primaryKey, entity);
+            _db.Add(key, value);
+            return Task.CompletedTask;
         }
 
-        public void Delete<T>(string primaryKey) where T : class => _db.Delete<string, T>(primaryKey);
+        public Task<T> Get<T>(string key) => _db.Get<string, T>(key).ToTask();
 
-        public T Get<T>(string primaryKey) where T : class => _db.Get<string, T>(primaryKey);
+        public IObservable<T> GetChanges<T>() => _db.ChangedDataCaptureStream.OfType<DataChangedEvent<string, T>>().Select(dc => dc.Data.value);
 
-        public IEnumerable<T> Query<T>() where T : class =>
-            _db.GetItems<string, T>().Select(kv => kv.value);
+        public Task Delete<T>(string key)
+        {
+            _db.Delete<string, T>(key);
+            return Task.CompletedTask;
+        }
 
-        public IEnumerable<T> Query<T>(string startingKey) where T : class =>
-            _db.GetItems<string, T>(startingKey).Select(kv => kv.value);
+        public Task<IEnumerable<T>> Query<T>() =>
+            _db.GetItems<string, T>().Select(kv => kv.value).ToTask();
 
-        public IObservable<T> GetChanges<T>() where T : class => _db.ChangedDataCaptureStream.OfType<DataChangedEvent<string, T>>().Select(dc => dc.Data.value);
+        public Task<IEnumerable<T>> Query<T>(string startingKey) =>
+            _db.GetItems<string, T>(startingKey).Select(kv => kv.value).ToTask();
     }
 }

@@ -1,9 +1,10 @@
+using System;
 using System.Linq;
 using System.Reflection;
 using EventSourcing.Contracts;
 using EventSourcing.GraphqlGateway.Graphql;
-using EventSourcing.GraphqlGateway.Graphql.Location;
-using EventSourcing.GraphqlGateway.Graphql.Vehicle;
+using EventSourcing.GraphqlGateway.Graphql.Types.Vehicle;
+using Google.Protobuf.WellKnownTypes;
 using GraphQL;
 using GraphQL.Http;
 using GraphQL.Types;
@@ -39,11 +40,22 @@ namespace EventSourcing.GraphqlGateway
                 .AddSingleton(new VehicleReadClient(new Channel(configuration.GetValue<string>("vehicleRead:host"), ChannelCredentials.Insecure)))
                 .AddSingleton(new VehicleWriteClient(new Channel(configuration.GetValue<string>("vehicleWrite:host"), ChannelCredentials.Insecure)))
                 .AddSingleton(new LocationReadClient(new Channel(configuration.GetValue<string>("locationRead:host"), ChannelCredentials.Insecure)))
-                .AddSingleton(new LocationWriteClient(new Channel(configuration.GetValue<string>("locationWrite:host"), ChannelCredentials.Insecure)));
+                .AddSingleton(new LocationWriteClient(new Channel(configuration.GetValue<string>("locationWrite:host"), ChannelCredentials.Insecure)))
+                .AddSingleton(new LockRead.LockReadClient(new Channel(configuration.GetValue<string>("lockRead:host"), ChannelCredentials.Insecure)))
+                .AddSingleton(new LockWrite.LockWriteClient(new Channel(configuration.GetValue<string>("lockWrite:host"), ChannelCredentials.Insecure)));
 
         public static IServiceCollection AddResolvers(this IServiceCollection services) =>
             services
                 .AddSingleton<IResolver<Vehicle, Location>, VehicleLocationResolver>()
-                .AddSingleton<IResolver<Location, Vehicle[]>, LocationVehicleResolver>();
+                .AddSingleton<IResolver<Vehicle, Lock>, VehicleLockResolver>();
+
+        public static IServiceCollection AddConverters(this IServiceCollection services)
+        {
+            ValueConverter.Register(
+                typeof(Timestamp),
+                typeof(DateTime),
+                value => ((value as Timestamp)?.ToDateTime()).GetValueOrDefault());
+            return services;
+        }
     }
 }

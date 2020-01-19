@@ -8,7 +8,14 @@ namespace EventSourcing.Contracts.Serialization
     {
         private readonly JsonSerializerOptions _settings;
 
-        public JsonSerializer() => _settings = new JsonSerializerOptions {ReadCommentHandling = JsonCommentHandling.Allow, IgnoreNullValues = true, PropertyNameCaseInsensitive = true};
+        public JsonSerializer() => _settings = new JsonSerializerOptions
+        {
+            ReadCommentHandling = JsonCommentHandling.Skip,
+            IgnoreNullValues = true,
+            PropertyNameCaseInsensitive = true,
+            AllowTrailingCommas = true,
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+        };
 
         public T Deserialize(byte[] serializedData) => System.Text.Json.JsonSerializer.Deserialize<T>(serializedData, _settings);
 
@@ -17,16 +24,43 @@ namespace EventSourcing.Contracts.Serialization
 
     public sealed class NewtonJsonSerializer : ISerializer
     {
-        public T Deserialize<T>(byte[] serializedData) => JsonConvert.DeserializeObject<T>(Encoding.UTF8.GetString(serializedData));
+        public T Deserialize<T>(byte[] serializedData)
+        {
+            try
+            {
+                return JsonConvert.DeserializeObject<T>(Encoding.UTF8.GetString(serializedData));
+            }
+            catch
+            {
+                return default;
+            }
+        }
 
-        public byte[] Serialize<T>(T dataToSerialize) => Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(dataToSerialize));
+        public byte[] Serialize<T>(T dataToSerialize)
+        {
+            try
+            {
+                return Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(dataToSerialize));
+            }
+            catch
+            {
+                return default;
+            }
+        }
     }
 
     public sealed class JsonSerializer : ISerializer
     {
         private readonly JsonSerializerOptions _settings;
 
-        public JsonSerializer() => _settings = new JsonSerializerOptions {IgnoreNullValues = true, PropertyNameCaseInsensitive = true};
+        public JsonSerializer() => _settings = new JsonSerializerOptions
+        {
+            ReadCommentHandling = JsonCommentHandling.Skip,
+            IgnoreNullValues = true,
+            PropertyNameCaseInsensitive = true,
+            AllowTrailingCommas = true,
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+        };
 
         public T Deserialize<T>(byte[] serializedData) => serializedData is null ? default : System.Text.Json.JsonSerializer.Deserialize<T>(serializedData, _settings);
 

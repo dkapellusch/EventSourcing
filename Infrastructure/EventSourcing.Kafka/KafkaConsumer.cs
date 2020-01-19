@@ -4,13 +4,13 @@ using System.Linq;
 using System.Reactive.Linq;
 using System.Threading;
 using Confluent.Kafka;
-using EventSourcing.Contracts;
+using EventSourcing.Contracts.Extensions;
 using EventSourcing.Contracts.Serialization;
 using Google.Protobuf;
 
 namespace EventSourcing.Kafka
 {
-    public sealed class KafkaConsumer<TPayload> : IDisposable where TPayload : IMessage<TPayload>
+    public sealed class KafkaConsumer<TPayload> : IDisposable where TPayload : IMessage<TPayload>, new()
     {
         private readonly IConsumer<string, TPayload> _consumer;
         private readonly string _topicName;
@@ -47,13 +47,13 @@ namespace EventSourcing.Kafka
         {
             try
             {
-                var consumeResult = _consumer.Consume(TimeSpan.FromMilliseconds(500));
+                var consumeResult = _consumer.Consume(TimeSpan.FromMilliseconds(5000));
 
                 if (consumeResult?.Message is null || consumeResult.IsPartitionEOF || consumeResult.Value is null) return null;
 
                 return consumeResult;
             }
-            catch (ConsumeException)
+            catch (Exception)
             {
             }
 

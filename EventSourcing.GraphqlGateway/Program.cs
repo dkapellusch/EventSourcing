@@ -25,28 +25,28 @@ namespace EventSourcing.GraphqlGateway
 
         private static Task Main(string[] args) => CreateWebHostBuilder(args).Build().RunAsync();
 
-        private static IWebHostBuilder CreateWebHostBuilder(string[] args) =>
-            WebHost.CreateDefaultBuilder(args)
-                .UseConfiguration(Configuration)
-                .ConfigureServices(services => services
-                    .AddGrpcClients(Configuration)
-                    .AddLogging()
-                    .AddResolvers()
-                    .AddGraphqlTypes()
-                    .AddHttpContextAccessor()
-                    .AddGraphQL()
-                    .AddWebSockets()
-                    .AddDataLoader()
-                )
-                .Configure((context, builder) => builder
-                    .UseWebSockets()
-                    .UseGraphQLWebSockets<Schema>("/api/graphql")
-                    .UseMiddleware<GraphQLMiddleware>()
-                    .UseGraphQLPlayground(new GraphQLPlaygroundOptions {Path = "/api/graphql/playground", GraphQLEndPoint = "/api/graphql"})
-                    .UseGraphQLVoyager(new GraphQLVoyagerOptions {Path = "/api/graphql/voyager", GraphQLEndPoint = "/api/graphql"})
-                    .UseGraphiQLServer(new GraphiQLOptions {GraphiQLPath = "/api/graphql/graphiql", GraphQLEndPoint = "/api/graphql"})
-                )
-                .UseKestrel()
-                .ConfigureKestrel(k => k.AllowSynchronousIO = true);
+        private static IWebHostBuilder CreateWebHostBuilder(string[] args) => WebHost.CreateDefaultBuilder(args)
+            .UseConfiguration(Configuration)
+            .ConfigureServices(services => services
+                .AddGrpcClients(Configuration)
+                .AddLogging()
+                .AddResolvers()
+                .AddConverters()
+                .AddGraphqlTypes()
+                .AddHttpContextAccessor()
+                .AddGraphQL()
+                .AddWebSockets()
+                .AddDataLoader()
+            )
+            .Configure((context, builder) => builder
+                .UseWebSockets()
+                .UseGraphQLWebSockets<Schema>("/api/graphql")
+                .UseMiddleware<GraphQLMiddleware>()
+                .UseGraphQLPlayground(new GraphQLPlaygroundOptions {Path = "/api/graphql/playground", GraphQLEndPoint = "/api/graphql"})
+                .UseGraphQLVoyager(new GraphQLVoyagerOptions {Path = "/api/graphql/voyager", GraphQLEndPoint = "/api/graphql"})
+                .UseGraphiQLServer(new GraphiQLOptions {GraphiQLPath = "/api/graphql/graphiql", GraphQLEndPoint = "/api/graphql"})
+            )
+            .UseKestrel()
+            .ConfigureKestrel(k => k.AllowSynchronousIO = true);
     }
 }

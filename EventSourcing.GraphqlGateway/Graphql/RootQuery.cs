@@ -1,5 +1,6 @@
-using EventSourcing.GraphqlGateway.Graphql.Location;
-using EventSourcing.GraphqlGateway.Graphql.Vehicle;
+using EventSourcing.GraphqlGateway.Graphql.Types.Location;
+using EventSourcing.GraphqlGateway.Graphql.Types.Lock;
+using EventSourcing.GraphqlGateway.Graphql.Types.Vehicle;
 using GraphQL;
 using GraphQL.Types;
 
@@ -14,12 +15,14 @@ namespace EventSourcing.GraphqlGateway.Graphql
             _resolver = resolver;
             AddQueries<VehicleQueries>();
             AddQueries<LocationQueries>();
+            AddQueries<LockQueries>();
         }
 
         private void AddQueries<T>() where T : IComplexGraphType
         {
             var subQuery = _resolver.Resolve<T>();
-            foreach (var field in subQuery.Fields) Field(field.Type, field.Name, field.Description, field.Arguments, ctx => field.Resolver.Resolve(ctx as ResolveFieldContext));
+            foreach (var field in subQuery.Fields)
+                Field(field.Type, field.Name, field.Description, field.Arguments, ctx => field.Resolver.Resolve(ctx as ResolveFieldContext));
         }
     }
 }

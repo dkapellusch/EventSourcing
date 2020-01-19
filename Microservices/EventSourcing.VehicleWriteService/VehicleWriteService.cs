@@ -1,5 +1,6 @@
 using System.Threading.Tasks;
 using EventSourcing.Contracts;
+using EventSourcing.Contracts.Extensions;
 using EventSourcing.Kafka;
 using FluentValidation;
 using Grpc.Core;

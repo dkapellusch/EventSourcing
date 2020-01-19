@@ -1,5 +1,6 @@
-using EventSourcing.GraphqlGateway.Graphql.Location;
-using EventSourcing.GraphqlGateway.Graphql.Vehicle;
+using EventSourcing.GraphqlGateway.Graphql.Types.Location;
+using EventSourcing.GraphqlGateway.Graphql.Types.Lock;
+using EventSourcing.GraphqlGateway.Graphql.Types.Vehicle;
 using GraphQL;
 using GraphQL.Types;
 
@@ -14,6 +15,7 @@ namespace EventSourcing.GraphqlGateway.Graphql
             _resolver = resolver;
             AddSubscriptions<VehicleSubscription>();
             AddSubscriptions<LocationSubscription>();
+            AddSubscriptions<LockSubscription>();
         }
 
         private void AddSubscriptions<T>() where T : IComplexGraphType

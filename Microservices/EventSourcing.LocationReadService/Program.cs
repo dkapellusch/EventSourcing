@@ -26,9 +26,10 @@ namespace EventSourcing.LocationReadService
         public static async Task Main(string[] args) => await CreateHostBuilder(args).Build().RunAsync();
 
         private static IWebHostBuilder CreateHostBuilder(string[] args) => WebHost.CreateDefaultBuilder(args)
-            .ConfigureKestrel(options => options.ListenAnyIP(6001, o => o.Protocols = HttpProtocols.Http2))
+            .ConfigureKestrel(options => options.ListenAnyIP(9001, o => o.Protocols = HttpProtocols.Http2))
             .ConfigureServices((hostContext, services) => services
                 .AddSingleton<LocationReadService>()
+                .AddSingleton<LocationRequestHandler>()
                 .AddKafkaConsumer<Location>(new ConsumerConfig
                 {
                     BootstrapServers = Configuration.GetValue<string>("kafka:host"),

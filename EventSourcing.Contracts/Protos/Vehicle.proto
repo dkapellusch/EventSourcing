@@ -25,12 +25,6 @@ service VehicleRead {
     rpc GetVehicle (VehicleRequest) returns (Vehicle) {
     }
 
-    rpc GetVehiclesByPartialVin (VehicleRequest) returns (Vehicles) {
-    }
-    
-    rpc GetAllVehicles (Empty) returns (Vehicles) {
-    }
-
     rpc GetVehicleUpdates (Empty) returns (stream Vehicle) {
     }
 }
@@ -42,3 +36,4 @@ service VehicleWrite {
     rpc AddVehicles (stream Vehicle) returns (stream Vehicle) {
     }
 }
+

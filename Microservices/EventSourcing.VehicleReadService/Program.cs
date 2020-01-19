@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Net.Http;
 using System.Threading.Tasks;
 using Confluent.Kafka;
 using EventSourcing.Contracts;
@@ -30,9 +29,7 @@ namespace EventSourcing.VehicleReadService
         private static IWebHostBuilder CreateHostBuilder(string[] args) => WebHost.CreateDefaultBuilder(args)
             .ConfigureKestrel(options => options.ListenAnyIP(5001, o => o.Protocols = HttpProtocols.Http2))
             .ConfigureServices((hostContext, services) => services
-                .AddSingleton(new KsqlClient(new HttpClient {BaseAddress = new Uri($"http://{Configuration.GetValue<string>("ksql:host")}/query")}))
-                .AddSingleton<KafkaKsqlQueryExecutor>()
-                .AddSingleton<VehicleKsqlTable>()
+                .AddKsql($"http://{Configuration.GetValue<string>("ksql:host")}/query")
                 .AddSingleton<KsqlVehicleReadService>()
                 .AddSingleton<VehicleReadService>()
                 .AddKafkaConsumer<Vehicle>(new ConsumerConfig
