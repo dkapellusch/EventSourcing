@@ -3,7 +3,6 @@ using System.Reactive;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
 using EventSourcing.Contracts;
-using EventSourcing.Contracts.Extensions;
 using EventSourcing.Kafka;
 using Grpc.Core;
 
@@ -18,14 +17,7 @@ namespace EventSourcing.LocationReadService
         public IObservable<Location> GetLocationPipeLine(LocationRequest request) =>
             Observable.Return(request)
                 .Do(Console.WriteLine)
-                // .Select(r => Observable.FromAsync(async t => await _db.Get(request.LocationCode)))
-                .Select(r =>
-                {
-                    // if (DateTime.UtcNow.Millisecond % 2 == 0)
-                    //     throw new InvalidCastException("Coin was heads.");
-
-                    return Observable.FromAsync(async t => await _db.Get(request.LocationCode));
-                })
+                .Select(r => { return Observable.FromAsync(async t => await _db.Get(request.LocationCode)); })
                 .Concat()
                 .Do(Console.WriteLine);
 
@@ -40,7 +32,7 @@ namespace EventSourcing.LocationReadService
 
     public class LocationReadService : LocationRead.LocationReadBase
     {
-        private LocationRequestHandler _locationRequestHandler;
+        private readonly LocationRequestHandler _locationRequestHandler;
         // private readonly KafkaBackedDb<Location> _db;
         //
         // public LocationReadService(KafkaBackedDb<Location> db) => _db = db;

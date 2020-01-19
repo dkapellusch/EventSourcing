@@ -48,6 +48,8 @@ namespace EventSourcing.Contracts.DataStore
             _slow = slow;
         }
 
+        public IObservable<T> GetChanges<T>() => _fast.GetChanges<T>().Merge(_slow.GetChanges<T>()).Distinct();
+
         public async Task<T> Get<T>(string key)
         {
             var valueFromFast = await _fast.Get<T>(key);
@@ -57,8 +59,6 @@ namespace EventSourcing.Contracts.DataStore
             if (valueFromSlow.IsNotNullOrDefault()) await _fast.Set(valueFromSlow, key);
             return valueFromSlow;
         }
-
-        public IObservable<T> GetChanges<T>() => _fast.GetChanges<T>().Merge(_slow.GetChanges<T>()).Distinct();
     }
 
     public class LayeredReadonlyDataStore<TFast, TSlow, TData> : IReadonlyDataStore<TData>, IChangeTracking<TData>
@@ -75,6 +75,8 @@ namespace EventSourcing.Contracts.DataStore
             _slow = slow;
         }
 
+        public IObservable<TData> GetChanges() => _fast.GetChanges().Merge(_slow.GetChanges()).Distinct();
+
         public async Task<TData> Get(string key)
         {
             var valueFromFast = await _fast.Get(key);
@@ -84,7 +86,5 @@ namespace EventSourcing.Contracts.DataStore
             if (valueFromSlow.IsNotNullOrDefault()) await _fast.Set(valueFromSlow, key);
             return valueFromSlow;
         }
-
-        public IObservable<TData> GetChanges() => _fast.GetChanges().Merge(_slow.GetChanges()).Distinct();
     }
 }

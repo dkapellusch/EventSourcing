@@ -8,10 +8,10 @@ namespace EventSourcing.KSQL
 {
     public class KsqlStore<TValue> : IReadonlyDataStore<TValue>, IChangeTracking<TValue>
     {
-        private readonly KsqlQueryExecutor _queryExecutor;
-        private readonly Mapper<TValue> _mapper;
-        private readonly string _tableName;
         private readonly KsqlConsumer<TValue> _consumer;
+        private readonly Mapper<TValue> _mapper;
+        private readonly KsqlQueryExecutor _queryExecutor;
+        private readonly string _tableName;
 
         public KsqlStore(KsqlQueryExecutor queryExecutor, Mapper<TValue> mapper, string stream, string table = null)
         {
@@ -28,6 +28,8 @@ namespace EventSourcing.KSQL
             _consumer.Start();
         }
 
+        public IObservable<TValue> GetChanges() => _consumer.Subscription;
+
         public async Task<TValue> Get(string key) => (await _queryExecutor.ExecuteQuery(new KsqlQuery
                     {
                         Ksql = $"Select * from {_tableName} where rowkey = '{key}';"
@@ -35,7 +37,5 @@ namespace EventSourcing.KSQL
                     _mapper)
                 .EnumerateAsync())
             .LastOrDefault();
-
-        public IObservable<TValue> GetChanges() => _consumer.Subscription;
     }
 }

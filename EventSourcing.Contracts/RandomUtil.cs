@@ -19,10 +19,7 @@ namespace EventSourcing.Contracts
             return items[randomIndex];
         }
 
-        public static double NextDouble(this Random random, double min, double max)
-        {
-            return Math.Floor(random.NextDouble() * (max - min) + min);
-        }
+        public static double NextDouble(this Random random, double min, double max) => Math.Floor(random.NextDouble() * (max - min) + min);
 
         public static string GetRandomVin() => string.Join("", Enumerable.Range(0, 17).Select(i => _vinCharacters.RandomChoice()));
     }

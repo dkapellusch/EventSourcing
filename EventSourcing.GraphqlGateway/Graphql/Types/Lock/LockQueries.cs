@@ -13,7 +13,7 @@ namespace EventSourcing.GraphqlGateway.Graphql.Types.Lock
                 ),
                 async ctx => await ctx.TryAsyncResolve(async context =>
                     await lockReadClient.GetLockAsync(
-                        new LockRequest()
+                        new LockRequest
                         {
                             ResourceId = ctx.Arguments["resourceId"].ToString()
                         }

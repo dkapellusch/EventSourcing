@@ -1,3 +1,4 @@
+using EventSourcing.Contracts;
 using GraphQL.Types;
 
 namespace EventSourcing.GraphqlGateway.Graphql.Types.Lock
@@ -19,10 +20,10 @@ namespace EventSourcing.GraphqlGateway.Graphql.Types.Lock
     {
         public LockTakeInputType()
         {
-            Field<IdGraphType>(nameof(Contracts.LockRequest.ResourceId));
-            Field(typeof(StringGraphType), nameof(Contracts.LockRequest.Requester));
-            Field(typeof(StringGraphType), nameof(Contracts.LockRequest.ResourceType));
-            Field(typeof(IntGraphType), nameof(Contracts.LockRequest.HoldSeconds));
+            Field<IdGraphType>(nameof(LockRequest.ResourceId));
+            Field(typeof(StringGraphType), nameof(LockRequest.Requester));
+            Field(typeof(StringGraphType), nameof(LockRequest.ResourceType));
+            Field(typeof(IntGraphType), nameof(LockRequest.HoldSeconds));
         }
     }
 

@@ -13,9 +13,9 @@ namespace EventSourcing.LockWriteService
 {
     public class LockWriteService : LockWrite.LockWriteBase
     {
-        private readonly KafkaProducer<string, Lock> _producer;
         private readonly IExpiringDataStore _expiringDataStore;
         private readonly ILockProvider _lockProvider;
+        private readonly KafkaProducer<string, Lock> _producer;
 
         public LockWriteService(KafkaProducer<string, Lock> producer, IExpiringDataStore expiringDataStore, ILockProvider lockProvider)
         {

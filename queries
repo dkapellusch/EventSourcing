@@ -103,6 +103,9 @@ ________________________________________________________________________________
 
 create stream Ticks (CurrentTime string, RoutingKey string, Originator string, TimerId string)  WITH (KAFKA_TOPIC='Ticks', VALUE_FORMAT='json');
 
+
+create stream LocksWithInactive as select ResourceId,LockHolderId,LockId,ResourceType,Expiry, STRINGTOTimeStamp(Expiry,'yyyy-MM-dd''T''HH:mm:ss.SSSSSS''Z''','UTC') <= UNIX_TIMESTAMP() as Inactive from Locks;
+
 Create Table Ticks as Select TopK(LastTickTime, 2) as LastTickTimes, TimerId, count(TimerId) as TickCount from Timer WINDOW HOPPING (SIZE 120 SECONDS, ADVANCE BY 60 SECONDS) group by TimerId emit changes;
 Create Table Ticks as Select TimerId, count(TimerId) as TickCount from Timer WINDOW HOPPING (SIZE 120 SECONDS, ADVANCE BY 60 SECONDS) group by TimerId emit changes;
 
@@ -115,3 +118,17 @@ Create stream Timer (
 ) WITH (KAFKA_TOPIC = 'Timer', VALUE_FORMAT = 'json');
 
 CREATE STREAM TIMER (NEXTEMIT BIGINT, EMIT BOOLEAN) WITH (KAFKA_TOPIC='Timer', PARTITIONS=2, REPLICAS=1, VALUE_FORMAT='json');
+CREATE STREAM Objects (routingkey string, time bigint, name string) WITH (KAFKA_TOPIC='Objects', PARTITIONS=1, REPLICAS=1, VALUE_FORMAT='json');
+
+Create Stream ObjectTicks as select 
+objects.time as time,
+objects.name as name
+from ticks join Objects within 48 hours on ticks.routingkey=objects.routingkey
+where ticks.routingkey = 'Locks' and UNIX_TIMESTAMP() > objects.time and UNIX_TIMESTAMP() < objects.time + 999
+emit changes;
+
+create stream Timer2( id boolean) WITH (KAFKA_TOPIC='Objects', PARTITIONS=1, REPLICAS=1, VALUE_FORMAT='json', KEY='id');
+insert into timer2 select id from timer2 WINDOW SESSION (60 SECONDS);
+insert into timer2 (id) values( true);
+
+select id, count(id) as count from Timer group by id emit changes;

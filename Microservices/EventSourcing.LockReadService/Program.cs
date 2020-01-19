@@ -6,15 +6,14 @@ using Confluent.Kafka;
 using EventSourcing.Contracts;
 using EventSourcing.Kafka;
 using EventSourcing.KSQL;
+using Google.Protobuf.WellKnownTypes;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Google.Protobuf.WellKnownTypes;
 using Timestamp = Google.Protobuf.WellKnownTypes.Timestamp;
-
 
 namespace EventSourcing.LockReadService
 {

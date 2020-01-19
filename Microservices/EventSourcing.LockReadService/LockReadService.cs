@@ -6,7 +6,6 @@ using EventSourcing.Contracts;
 using EventSourcing.Contracts.Extensions;
 using EventSourcing.KSQL;
 using Grpc.Core;
-using Empty = EventSourcing.Contracts.Empty;
 
 namespace EventSourcing.LockReadService
 {

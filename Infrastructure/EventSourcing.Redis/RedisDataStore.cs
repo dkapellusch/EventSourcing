@@ -14,14 +14,41 @@ namespace EventSourcing.Redis
     public class RedisDataStore : IExpiringDataStore, IChangeTracking
     {
         private readonly IDatabaseAsync _database;
-        private readonly ISerializer _serializer;
         private readonly ISubject<string> _expiredKeys = new Subject<string>();
+        private readonly ISerializer _serializer;
         private volatile bool _running;
 
         public RedisDataStore(IDatabaseAsync database, ISerializer serializer)
         {
             _database = database;
             _serializer = serializer;
+        }
+
+        public IObservable<T> GetChanges<T>()
+        {
+            var changes = new Subject<T>();
+            _database.Multiplexer
+                .GetSubscriber()
+                .Subscribe("*",
+                    async (channel, value) =>
+                    {
+                        try
+                        {
+                            var split = value.ToString().Split("/");
+                            var keySpace = split[0];
+                            var key = split[1];
+                            if (!keySpace.Equals(typeof(T).Name, StringComparison.OrdinalIgnoreCase)) return;
+
+                            var keyValue = await Get<T>(key);
+                            if (keyValue.IsNotNullOrDefault()) changes.OnNext(keyValue);
+                        }
+                        catch
+                        {
+                        }
+                    }
+                );
+
+            return changes.AsObservable();
         }
 
         public IObservable<string> ExpiredKeys
@@ -31,26 +58,6 @@ namespace EventSourcing.Redis
                 if (!_running) WatchExpirations();
                 return _expiredKeys.AsObservable();
             }
-        }
-
-        private void WatchExpirations()
-        {
-            if (_running) return;
-
-            _database.Multiplexer
-                .GetSubscriber()
-                .Subscribe("*expired",
-                    (channel, value) => _expiredKeys.OnNext(value.ToString())
-                );
-
-            _running = true;
-        }
-
-        public async Task Set<T>(Func<T> transaction, string key)
-        {
-            var item = transaction();
-            var serializedItem = _serializer.Serialize(item);
-            await _database.StringSetAsync(GetKey<T>(key), serializedItem);
         }
 
         public async Task Set<T>(T value, string key)
@@ -94,35 +101,28 @@ namespace EventSourcing.Redis
             return results.Where(k => k.ToString().StartsWith(key, StringComparison.Ordinal));
         }
 
+        private void WatchExpirations()
+        {
+            if (_running) return;
+
+            _database.Multiplexer
+                .GetSubscriber()
+                .Subscribe("*expired",
+                    (channel, value) => _expiredKeys.OnNext(value.ToString())
+                );
+
+            _running = true;
+        }
+
+        public async Task Set<T>(Func<T> transaction, string key)
+        {
+            var item = transaction();
+            var serializedItem = _serializer.Serialize(item);
+            await _database.StringSetAsync(GetKey<T>(key), serializedItem);
+        }
+
         private static string GetKey<T>(string key) => !key.Contains("/")
             ? $"{typeof(T).Name}/{key}".Trim().ToLowerInvariant()
             : throw new ArgumentException($"Key: {key} contained an illegal character '/'.");
-
-        public IObservable<T> GetChanges<T>()
-        {
-            var changes = new Subject<T>();
-            _database.Multiplexer
-                .GetSubscriber()
-                .Subscribe("*",
-                    async (channel, value) =>
-                    {
-                        try
-                        {
-                            var split = value.ToString().Split("/");
-                            var keySpace = split[0];
-                            var key = split[1];
-                            if (!keySpace.Equals(typeof(T).Name, StringComparison.OrdinalIgnoreCase)) return;
-
-                            var keyValue = await Get<T>(key);
-                            if (keyValue.IsNotNullOrDefault()) changes.OnNext(keyValue);
-                        }
-                        catch
-                        {
-                        }
-                    }
-                );
-
-            return changes.AsObservable();
-        }
     }
 }
