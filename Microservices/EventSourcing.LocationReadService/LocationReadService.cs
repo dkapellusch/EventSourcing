@@ -33,26 +33,13 @@ namespace EventSourcing.LocationReadService
     public class LocationReadService : LocationRead.LocationReadBase
     {
         private readonly LocationRequestHandler _locationRequestHandler;
-        // private readonly KafkaBackedDb<Location> _db;
-        //
-        // public LocationReadService(KafkaBackedDb<Location> db) => _db = db;
 
         public LocationReadService(LocationRequestHandler locationRequestHandler) => _locationRequestHandler = locationRequestHandler;
 
-        public override async Task<Location> GetLocation(LocationRequest request, ServerCallContext context)
-        {
-            var pipeLine = await _locationRequestHandler.GetLocationPipeLine(request);
-            // var result = await pipeLine.FirstOrDefaultAsync();
-            // if (result.Exception.IsNotNullOrDefault()) throw new RpcException(new Status(StatusCode.Internal, result.Exception.Message), result.Exception.Message);
-
-            return pipeLine;
-        }
+        public override async Task<Location> GetLocation(LocationRequest request, ServerCallContext context) =>
+            await _locationRequestHandler.GetLocationPipeLine(request);
 
         public override async Task GetLocationUpdates(Empty request, IServerStreamWriter<Location> responseStream, ServerCallContext context) =>
             await _locationRequestHandler.GetLocationUpdates().ForEachAsync(message => responseStream.WriteAsync(message.Value), context.CancellationToken);
-
-
-        // public override async Task GetLocationUpdates(Empty request, IServerStreamWriter<Location> responseStream, ServerCallContext context) =>
-        //     await _db.GetChanges().ForEachAsync(message => responseStream.WriteAsync(message), context.CancellationToken);
     }
 }

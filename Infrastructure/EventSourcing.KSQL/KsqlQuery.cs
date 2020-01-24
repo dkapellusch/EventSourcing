@@ -26,6 +26,6 @@ namespace EventSourcing.KSQL
 
         [JsonProperty("ksql")] public string Ksql { get; set; }
 
-        [JsonProperty("streamsProperties")] public Dictionary<string, string> StreamProperties { get; } = new Dictionary<string, string>();
+        [JsonProperty("streamsProperties")] public Dictionary<string, string> StreamProperties { get; set; } = new Dictionary<string, string>();
     }
 }

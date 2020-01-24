@@ -3,19 +3,19 @@ using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using EventSourcing.Contracts;
-using EventSourcing.Contracts.DataStore;
 using EventSourcing.Contracts.Extensions;
 using EventSourcing.Kafka;
+using EventSourcing.Redis;
 using Microsoft.Extensions.Hosting;
 
 namespace EventSourcing.LockWriteService
 {
     public class ExpiredLockNotifier : BackgroundService
     {
-        private readonly IExpiringDataStore _dataStore;
         private readonly KafkaProducer<string, Lock> _lockProducer;
+        private readonly RedisDataStore _dataStore;
 
-        public ExpiredLockNotifier(IExpiringDataStore dataStore, KafkaProducer<string, Lock> lockProducer)
+        public ExpiredLockNotifier(RedisDataStore dataStore, KafkaProducer<string, Lock> lockProducer)
         {
             _dataStore = dataStore;
             _lockProducer = lockProducer;

@@ -7,9 +7,9 @@ using Google.Protobuf;
 
 namespace EventSourcing.Kafka
 {
-    public sealed class KafkaProducer<TKey, TPayload> : IDisposable where TPayload : IMessage<TPayload>, new()
+    public sealed class KafkaProducer<TKey, TPayload> : IDisposable, IProducer<TKey, TPayload> where TPayload : IMessage<TPayload>, new()
     {
-        private readonly IProducer<TKey, TPayload> _producer;
+        private readonly Confluent.Kafka.IProducer<TKey, TPayload> _producer;
         private readonly string _topicName;
 
         public KafkaProducer(ProducerConfig config, IMessageSerializer<TPayload> serializer, string topicName = null)
@@ -27,6 +27,19 @@ namespace EventSourcing.Kafka
             try
             {
                 return await _producer.ProduceAsync(_topicName, new Message<TKey, TPayload> {Key = key, Value = payload});
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.ToString());
+                throw;
+            }
+        }
+
+        public void Produce(TPayload payload, TKey key)
+        {
+            try
+            {
+                _producer.Produce(_topicName, new Message<TKey, TPayload> {Key = key, Value = payload});
             }
             catch (Exception e)
             {

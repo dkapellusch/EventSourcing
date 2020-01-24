@@ -1,11 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
-using Confluent.Kafka;
 using EventSourcing.Contracts;
-using EventSourcing.Kafka;
 using EventSourcing.KSQL;
-using EventSourcing.RocksDb.Extensions;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -13,7 +11,7 @@ using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace EventSourcing.VehicleReadService
+namespace EventSourcing.NotificationRead
 {
     internal class Program
     {
@@ -27,25 +25,31 @@ namespace EventSourcing.VehicleReadService
         public static async Task Main(string[] args) => await CreateHostBuilder(args).Build().RunAsync();
 
         private static IWebHostBuilder CreateHostBuilder(string[] args) => WebHost.CreateDefaultBuilder(args)
-            .ConfigureKestrel(options => options.ListenAnyIP(Configuration.GetValue<int>("port"), o => o.Protocols = HttpProtocols.Http2))
+            .ConfigureKestrel(options =>
+                options.ListenAnyIP(Configuration.GetValue<int>("port"), o => o.Protocols = HttpProtocols.Http2)
+            )
             .ConfigureServices((hostContext, services) => services
+                .AddSingleton<NotificationReadService>()
                 .AddKsql($"http://{Configuration.GetValue<string>("ksql:host")}")
-                .AddSingleton<KsqlVehicleReadService>()
-                .AddSingleton<VehicleReadService>()
-                .AddKafkaConsumer<Vehicle>(new ConsumerConfig
-                {
-                    BootstrapServers = Configuration.GetValue<string>("kafka:host"),
-                    GroupId = "VehicleRead",
-                    ClientId = Guid.NewGuid().ToString(),
-                    AutoOffsetReset = AutoOffsetReset.Earliest
-                })
-                .AddRocksDb(Configuration.GetValue<string>("rocks:path"))
-                .AddSingleton(typeof(KafkaBackedDb<>))
+                .AddKsqlStore(
+                    NotificationMapper,
+                    new KsqlQuery {Ksql = "Select * from  ReadyNotifications emit changes;"},
+                    new KsqlQuery {Ksql = "select * from PendingNotifications_By_NotificationId where rowkey = '{0}';"}
+                )
                 .AddGrpc()
             )
             .Configure(builder => builder
                 .UseRouting()
-                .UseEndpoints(endpointBuilder => endpointBuilder.MapGrpcService<VehicleReadService>())
+                .UseEndpoints(endpointBuilder => endpointBuilder.MapGrpcService<NotificationReadService>())
             );
+
+        private static Notification NotificationMapper(IDictionary<string, dynamic> columns) =>
+            new Notification
+            {
+                NotificationId = columns.GetValue<Notification, string>(n => n.NotificationId) ?? string.Empty,
+                Category = columns.GetValue<Notification, string>(n => n.Category) ?? string.Empty,
+                Data = columns.GetValue<Notification, string>(n => n.Data) ?? string.Empty,
+                NotificationTime = columns.GetValue<Notification, long>(l => l.NotificationTime)
+            };
     }
 }

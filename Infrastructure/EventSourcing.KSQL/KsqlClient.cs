@@ -15,10 +15,10 @@ namespace EventSourcing.KSQL
 
         public KsqlClient(HttpClient client) => _client = client;
 
-        public async Task<Stream> ExecuteQueryAsync(KsqlQuery query, CancellationToken token = default)
+        public async Task<Stream> ExecuteQueryAsync(KsqlQuery query, CancellationToken token = default, bool isQuery = true)
         {
             var request = JsonConvert.SerializeObject(query);
-            var response = await _client.SendAsync(new HttpRequestMessage(HttpMethod.Post, "")
+            var response = await _client.SendAsync(new HttpRequestMessage(HttpMethod.Post, isQuery ? "/query" : "/ksql")
                 {
                     Content = new StringContent(request, Encoding.UTF8, KsqlMediaType),
                     Headers = {{"accept", MediaTypeWithQualityHeaderValue.Parse(KsqlMediaType).ToString()}}

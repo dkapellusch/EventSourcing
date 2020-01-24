@@ -3,17 +3,17 @@ using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
 using Confluent.Kafka;
-using EventSourcing.Contracts.DataStore;
 using EventSourcing.Contracts.Extensions;
+using EventSourcing.RocksDb.RocksAbstractions;
 using Google.Protobuf;
 
 namespace EventSourcing.Kafka
 {
-    public class KafkaBackedDb<TValue> : IChangeTracking<TValue>, IReadonlyDataStore<TValue> where TValue : IMessage<TValue>, new()
+    public class KafkaBackedDb<TValue> where TValue : IMessage<TValue>, new()
     {
-        private readonly IChangeTrackingDataStore _dataStore;
+        private RocksStore _dataStore;
 
-        public KafkaBackedDb(IChangeTrackingDataStore dataStore, KafkaConsumer<TValue> kafkaConsumer)
+        public KafkaBackedDb(RocksStore dataStore, Consumer<TValue> consumer)
         {
             _dataStore = dataStore;
             _dataStore.GetChanges<Offset>().Subscribe(offset => Console.WriteLine(offset));
@@ -21,9 +21,9 @@ namespace EventSourcing.Kafka
             var offsetKey = $"{typeof(TValue).Name}.offset";
             var currentOffset = _dataStore.Get<long>(offsetKey).Result;
 
-            kafkaConsumer.SeekToOffset(currentOffset);
-            kafkaConsumer.Start();
-            kafkaConsumer.Subscription
+            consumer.SeekToOffset(currentOffset);
+            consumer.Start();
+            consumer.Subscription
                 .ObserveOn(TaskPoolScheduler.Default)
                 .SubscribeOn(TaskPoolScheduler.Default)
                 .Subscribe(async message =>

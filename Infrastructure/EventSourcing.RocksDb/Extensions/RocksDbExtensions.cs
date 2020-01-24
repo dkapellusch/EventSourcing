@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading;
 using EventSourcing.RocksDb.RocksAbstractions;
 using RocksDbSharp;
 
@@ -44,11 +45,11 @@ namespace EventSourcing.RocksDb.Extensions
             }
         }
 
-        public static IEnumerable<(byte[] key, byte[] value)> GetEnumerable(this Iterator iterator)
+        public static IEnumerable<(byte[] key, byte[] value)> GetEnumerable(this Iterator iterator, CancellationToken token = default)
         {
             using var rocksIterator = iterator;
 
-            while (rocksIterator.Valid())
+            while (rocksIterator.Valid() && !token.IsCancellationRequested)
             {
                 var key = rocksIterator.Key();
                 var value = rocksIterator.Value();

@@ -47,7 +47,7 @@ namespace EventSourcing.Contracts.Extensions
                 {
                     if (cancellation.IsCancellationRequested) return default;
 
-                    var hasNext = asyncEnumerator.IsNotNullOrDefault() && await asyncEnumerator.MoveNextAsync();
+                    var hasNext = await asyncEnumerator.MoveNextAsync();
                     return hasNext ? asyncEnumerator.Current : default;
                 })
                 .ObserveOn(TaskPoolScheduler.Default)

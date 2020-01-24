@@ -1,3 +1,8 @@
+
+docker run --name ksql-cli --network host -it confluentinc/ksqldb-cli ksql http://0.0.0.0:8088
+docker start ksql-cli
+docker exec -it eventsourcing_ksql-cli_1 ksql http://KSQL:8088
+
 SET 'auto.offset.reset'='earliest';
 SET 'auto.offset.reset'='latest';
 
@@ -11,19 +16,10 @@ CREATE TABLE vehicles_table AS SELECT vin , locationCode, make, model from vehic
 
 Create Table vehicles_count AS SELECT 1 AS Counter FROM vehicles_all;
 
-docker run --name ksql-cli --network host -it confluentinc/ksqldb-cli ksql http://0.0.0.0:8088
-
-
 Locks 
 _________________________________________________________________________________________________________
 
-Create stream Locks (
-  ResourceId string,
-  LockHolderId string,
-  LockId string,
-  ResourceType string,
-  Expiry string
-) WITH (KAFKA_TOPIC = 'Locks', VALUE_FORMAT = 'json');
+Create stream Locks (ResourceId string, LockHolderId string, LockId string, ResourceType string, Expiry string) WITH (KAFKA_TOPIC = 'Locks', VALUE_FORMAT = 'json');
 
 create stream EnrichedLocks as select ResourceId,LockHolderId,LockId,ResourceType,Expiry, STRINGTOTimeStamp(Expiry,'yyyy-MM-dd''T''HH:mm:ss.SSSSSS''Z''','UTC') <= UNIX_TIMESTAMP() as Inactive from Locks;
 
@@ -35,6 +31,62 @@ create table InactiveLocks_By_ResourceId as select RESOURCEID, count(RESOURCEID)
 
 create table ActiveLocks_By_LockId as select collect_set(RESOURCEID) as RESOURCEID, collect_set(LOCKHOLDERID) as LOCKHOLDERID, collect_set(RESOURCETYPE) as RESOURCETYPE , lockId, count(lockId) as lockCount, collect_set(expiry) as expiry, collect_set(Inactive) as Inactive from ActiveLocks group by lockId;
 create table ActiveLocks_By_ResourceId as select RESOURCEID, count(RESOURCEID) as lockedCount, collect_set(LOCKHOLDERID) as LOCKHOLDERID, collect_set(RESOURCETYPE) as RESOURCETYPE , collect_set(lockId) as lockId, collect_set(expiry) as expiry, collect_set(Inactive) as Inactive from ActiveLocks group by RESOURCEID;
+
+Notifications
+_________________________________________________________________________________________________________
+
+
+Create stream Notifications (NotificationId string, Category string, NotificationTime bigint, Data string) WITH (KAFKA_TOPIC = 'Notifications', VALUE_FORMAT = 'json');
+Create stream NotificationTicks as Select *, 1 as JoinMe from Notifications where Category = 'Ticks' emit changes;
+Create stream Events as Select *, 1 as JoinMe from Notifications where not Category = 'Ticks' emit changes;
+
+Create stream ReadyNotifications as Select 
+Events.NotificationId as NotificationId, Events.Category as Category,
+Events.NotificationTime as NotificationTime, Events.Data as data
+from Events left join NotificationTicks within 1 hour on Events.JoinMe=NotificationTicks.JoinMe
+where Events.NotificationTime <= UNIX_TIMESTAMP() and
+      Events.NotificationTime + 999 >= UNIX_TIMESTAMP()
+emit changes;
+
+
+create table Notifications_By_NotificationId as 
+select 
+ NotificationId,
+ count(NotificationId) as notificationCount,
+ collect_set(Category) as Category,
+ collect_set(NotificationTime) as NotificationTime,
+ collect_set(Data) as Data 
+from ReadyNotifications group by NotificationId;
+
+create table PendingNotifications_By_NotificationId as 
+select 
+ NotificationId,
+ count(NotificationId) as notificationCount,
+ collect_set(Category) as Category,
+ collect_set(NotificationTime) as NotificationTime,
+ collect_set(Data) as Data 
+from Events group by NotificationId;
+
+
+create stream ticks (joinme int) WITH (KAFKA_TOPIC = 'ticks', VALUE_FORMAT = 'json', partitions=1, replicas=1);
+
+Select 
+Events.NotificationId as NotificationId, Events.Category as Category,
+Events.NotificationTime as NotificationTime, Events.Data as data
+from Events left join ticks within 1 hour on Events.JoinMe=ticks.JoinMe
+where Events.NotificationTime <= UNIX_TIMESTAMP() and
+      Events.NotificationTime + 100 >= UNIX_TIMESTAMP()
+emit changes;
+
+
+create stream ReadyNotifications as Select 
+Events.NotificationId as NotificationId, Events.Category as Category,
+Events.NotificationTime as NotificationTime, Events.Data as data
+from ticks left join Events within 1 hour on Events.JoinMe=ticks.JoinMe
+where Events.NotificationTime <= UNIX_TIMESTAMP() and
+    Events.NotificationTime + 1000 >= UNIX_TIMESTAMP()
+emit changes;
+_________________________________________________________________________________________________________
 
 IceBox
 _________________________________________________________________________________________________________
@@ -97,38 +149,3 @@ emit changes;
 insert into locks select vin, Expiry, lockId, true as expired from LockTicks where expired;
 create stream ExpiredLocks as select vin, expiry, lockId, true as expired from LockTicks  where expired;
 create stream LocksThatExpired as select collect_set(vin), lockId, count(lockId) as count,  collect_set(true) as expired from TickLocks group by lockid where expired = true ;
-
-Timer
-_________________________________________________________________________________________________________
-
-create stream Ticks (CurrentTime string, RoutingKey string, Originator string, TimerId string)  WITH (KAFKA_TOPIC='Ticks', VALUE_FORMAT='json');
-
-
-create stream LocksWithInactive as select ResourceId,LockHolderId,LockId,ResourceType,Expiry, STRINGTOTimeStamp(Expiry,'yyyy-MM-dd''T''HH:mm:ss.SSSSSS''Z''','UTC') <= UNIX_TIMESTAMP() as Inactive from Locks;
-
-Create Table Ticks as Select TopK(LastTickTime, 2) as LastTickTimes, TimerId, count(TimerId) as TickCount from Timer WINDOW HOPPING (SIZE 120 SECONDS, ADVANCE BY 60 SECONDS) group by TimerId emit changes;
-Create Table Ticks as Select TimerId, count(TimerId) as TickCount from Timer WINDOW HOPPING (SIZE 120 SECONDS, ADVANCE BY 60 SECONDS) group by TimerId emit changes;
-
-Insert into Timer select UNIX_TIMESTAMP() as LastTickTime, 1 as TimerId from Ticks;
-
-Insert into Timer (LastTickTime, TimerId) values (UNIX_TIMESTAMP(),1)
-Create stream Timer (
-  NextEmit bigint,
-  Emit boolean
-) WITH (KAFKA_TOPIC = 'Timer', VALUE_FORMAT = 'json');
-
-CREATE STREAM TIMER (NEXTEMIT BIGINT, EMIT BOOLEAN) WITH (KAFKA_TOPIC='Timer', PARTITIONS=2, REPLICAS=1, VALUE_FORMAT='json');
-CREATE STREAM Objects (routingkey string, time bigint, name string) WITH (KAFKA_TOPIC='Objects', PARTITIONS=1, REPLICAS=1, VALUE_FORMAT='json');
-
-Create Stream ObjectTicks as select 
-objects.time as time,
-objects.name as name
-from ticks join Objects within 48 hours on ticks.routingkey=objects.routingkey
-where ticks.routingkey = 'Locks' and UNIX_TIMESTAMP() > objects.time and UNIX_TIMESTAMP() < objects.time + 999
-emit changes;
-
-create stream Timer2( id boolean) WITH (KAFKA_TOPIC='Objects', PARTITIONS=1, REPLICAS=1, VALUE_FORMAT='json', KEY='id');
-insert into timer2 select id from timer2 WINDOW SESSION (60 SECONDS);
-insert into timer2 (id) values( true);
-
-select id, count(id) as count from Timer group by id emit changes;

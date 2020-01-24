@@ -25,7 +25,9 @@ namespace EventSourcing.LocationWriteService
         public static async Task Main(string[] args) => await CreateHostBuilder(args).Build().RunAsync();
 
         private static IWebHostBuilder CreateHostBuilder(string[] args) => WebHost.CreateDefaultBuilder(args)
-            .ConfigureKestrel(options => options.ListenAnyIP(6000, o => o.Protocols = HttpProtocols.Http2))
+            .ConfigureKestrel(options =>
+                options.ListenAnyIP(Configuration.GetValue<int>("port"), o => o.Protocols = HttpProtocols.Http2)
+            )
             .ConfigureServices((hostContext, services) => services
                 .AddSingleton<LocationWriteService>()
                 .AddKafkaProducer<string, Location>(new ProducerConfig

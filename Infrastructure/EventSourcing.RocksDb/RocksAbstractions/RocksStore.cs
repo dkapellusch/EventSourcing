@@ -3,12 +3,30 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
-using EventSourcing.Contracts.DataStore;
 using EventSourcing.Contracts.Extensions;
 
 namespace EventSourcing.RocksDb.RocksAbstractions
 {
-    public class RocksStore : IChangeTrackingDataStore, IDataStore
+    public class RocksStore<T>
+    {
+        private readonly RocksStore _rocksStore;
+
+        public RocksStore(RocksStore rocksStore) => _rocksStore = rocksStore;
+
+        public async Task<T> Get(string key) => await _rocksStore.Get<T>(key);
+
+        public async Task Set(T value, string key) => await _rocksStore.Set(value, key);
+
+        public async Task<IEnumerable<T>> Query() => await _rocksStore.Query<T>();
+
+        public async Task<IEnumerable<T>> Query(string startingKey) => await _rocksStore.Query<T>(startingKey);
+
+        public async Task Delete(string key) => await _rocksStore.Delete<T>(key);
+
+        public IObservable<T> GetChanges() => _rocksStore.GetChanges<T>();
+    }
+
+    public class RocksStore
     {
         private readonly RockCollection _db;
 
@@ -22,7 +40,9 @@ namespace EventSourcing.RocksDb.RocksAbstractions
 
         public Task<T> Get<T>(string key) => _db.Get<string, T>(key).ToTask();
 
-        public IObservable<T> GetChanges<T>() => _db.ChangedDataCaptureStream.OfType<DataChangedEvent<string, T>>().Select(dc => dc.Data.value);
+        public IObservable<T> GetChanges<T>() => _db.ChangedDataCaptureStream
+            .OfType<DataChangedEvent<string, T>>()
+            .Select(dc => dc.Data.value);
 
         public Task Delete<T>(string key)
         {

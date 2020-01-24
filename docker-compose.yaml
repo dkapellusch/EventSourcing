@@ -8,7 +8,7 @@ services:
       ZOOKEEPER_CLIENT_PORT: 32181
     restart: always
     networks:
-      - "dd-net"
+      - "es-net"
 
   DDKafka:
     image: "confluentinc/cp-kafka:latest"
@@ -25,22 +25,7 @@ services:
     depends_on:
       - "DDZookeeper"
     networks:
-      - "dd-net"
-
-  KSQL:
-    image: "confluentinc/ksqldb-server:latest"
-    ports:
-      - "8088:8088"
-      - "8089:8089"
-    environment:
-      KSQL_BOOTSTRAP_SERVERS: "DDKafka:39093"
-      KSQL_LISTENERS: "http://0.0.0.0:8088/,https://0.0.0.0:8089/"
-      KSQL_OPTS: "-Dksql.service.id=ksql_service_3_  -Dlisteners=http://0.0.0.0:8088/"
-    restart: always
-    depends_on:
-      - "DDKafka"
-    networks:
-      - "dd-net"
+      - "es-net"
 
   DDKafka2:
     image: "confluentinc/cp-kafka:latest"
@@ -57,7 +42,22 @@ services:
     depends_on:
       - "DDZookeeper"
     networks:
-      - "dd-net"
+      - "es-net"
+
+  KSQL:
+    image: "confluentinc/ksqldb-server:latest"
+    ports:
+      - "8088:8088"
+      - "8089:8089"
+    environment:
+      KSQL_BOOTSTRAP_SERVERS: "DDKafka:39093"
+      KSQL_LISTENERS: "http://0.0.0.0:8088/,https://0.0.0.0:8089/"
+      KSQL_OPTS: "-Dksql.service.id=ksql_service_3_  -Dlisteners=http://0.0.0.0:8088/"
+    restart: always
+    depends_on:
+      - "DDKafka"
+    networks:
+      - "es-net"
 
   Redis:
     image: redis:latest
@@ -68,7 +68,7 @@ services:
     command:
       - /usr/local/etc/redis/redis.conf
     networks:
-      - "dd-net"
+      - "es-net"
 
   LocationReadService:
     image: "dkapellusch/eventsourcing.locationreadservice"
@@ -80,7 +80,7 @@ services:
       - "DDKafka"
       - "DDKafka2"
     networks:
-      - "dd-net"
+      - "es-net"
 
   LocationWriteService:
     image: "dkapellusch/eventsourcing.locationwriteservice"
@@ -92,7 +92,7 @@ services:
       - "DDKafka"
       - "DDKafka2"
     networks:
-      - "dd-net"
+      - "es-net"
 
   VehicleReadService:
     image: "dkapellusch/eventsourcing.vehiclereadservice"
@@ -104,7 +104,7 @@ services:
       - "DDKafka"
       - "DDKafka2"
     networks:
-      - "dd-net"
+      - "es-net"
 
   VehicleWriteService:
     image: "dkapellusch/eventsourcing.vehiclewriteservice"
@@ -116,7 +116,7 @@ services:
       - "DDKafka"
       - "DDKafka2"
     networks:
-      - "dd-net"
+      - "es-net"
 
   LockReadService:
     image: "dkapellusch/eventsourcing.lockreadservice"
@@ -129,7 +129,7 @@ services:
       - "DDKafka2"
       - "Redis"
     networks:
-      - "dd-net"
+      - "es-net"
 
   LockWriteService:
     image: "dkapellusch/eventsourcing.lockwriteservice"
@@ -142,7 +142,7 @@ services:
       - "DDKafka2"
       - "Redis"
     networks:
-      - "dd-net"
+      - "es-net"
 
   Graphql:
     image: "dkapellusch/eventsourcing.graphql"
@@ -157,12 +157,29 @@ services:
       - "LockReadService"
       - "LockWriteService"
     networks:
-      - "dd-net"
-  # ksql-cli:
-  #   image: confluentinc/cp-ksql-cli:5.1.0
-  #   depends_on:
-  #     - ksql-server
-  #   entrypoint: /bin/sh
+      - "es-net"
+
+  ksql-cli:
+    image: confluentinc/ksqldb-cli:latest
+    depends_on:
+      - KSQL
+    entrypoint: /bin/sh
     tty: true
+    networks:
+      - "es-net"
+
+  kafka-manager:
+    image: kafkamanager/kafka-manager:latest
+    ports:
+      - "39000:9000"
+    environment:
+      ZK_HOSTS: "DDZookeeper:32181"
+      APPLICATION_SECRET: "letmein"
+    depends_on:
+      - DDZookeeper
+      - DDKafka
+    networks:
+      - "es-net"
+
 networks:
-  dd-net:
+  es-net:

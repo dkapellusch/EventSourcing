@@ -1,0 +1,53 @@
+syntax = "proto3";
+option csharp_namespace = "EventSourcing.Contracts";
+package ES;
+
+message NotificationRequest {
+    int64 NotificationTime = 1;
+    string Data = 2;
+    string Category = 3;
+    string Requester = 4;
+}
+
+message RecurringNotificationRequest {
+    int64 Interval = 1;
+    string Data = 2;
+    string Category = 3;
+    string Requester = 4;
+}
+
+message NotificationResponse {
+    string NotificationId = 1;
+    string Category = 2;
+    int64 NotificationTime = 3;
+}
+
+message Notification {
+    string NotificationId = 1;
+    string Category = 2;
+    int64 NotificationTime = 3;
+    string Data = 4;
+}
+
+message NotificationId {
+    string Id = 1;
+}
+
+message NotificationSubscription {
+    oneof Identifier {
+        string NotificationId = 1;
+        string Category = 2;
+    }
+    int64 NotificationTime = 3;
+}
+
+service NotificationWrite {
+    rpc Notify (NotificationRequest) returns (NotificationResponse);
+    rpc NotifyRecurring (RecurringNotificationRequest) returns (NotificationResponse);
+    rpc CancelRecurringNotification (NotificationId) returns (NotificationResponse);
+}
+
+service NotificationRead {
+    rpc Subscribe (NotificationSubscription) returns (stream Notification);
+    rpc GetNotification (NotificationId) returns (Notification);
+}

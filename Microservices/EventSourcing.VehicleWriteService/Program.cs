@@ -27,7 +27,7 @@ namespace EventSourcing.VehicleWriteService
         public static async Task Main(string[] args) => await CreateHostBuilder(args).Build().RunAsync();
 
         private static IWebHostBuilder CreateHostBuilder(string[] args) => WebHost.CreateDefaultBuilder(args)
-            .ConfigureKestrel(options => options.ListenAnyIP(5000, o => o.Protocols = HttpProtocols.Http2))
+            .ConfigureKestrel(options => options.ListenAnyIP(Configuration.GetValue<int>("port"), o => o.Protocols = HttpProtocols.Http2))
             .ConfigureServices((hostContext, services) => services
                 .AddSingleton<VehicleWriteService>()
                 .AddSingleton<IValidator<Vehicle>, VehicleValidator>()

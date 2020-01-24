@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using Confluent.Kafka;
 using EventSourcing.Contracts;
 using EventSourcing.Kafka;
-using EventSourcing.KSQL;
+using EventSourcing.Redis;
 using EventSourcing.RocksDb.Extensions;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Builder;
@@ -13,7 +13,7 @@ using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace EventSourcing.VehicleReadService
+namespace EventSourcing.NotificationWrite
 {
     internal class Program
     {
@@ -24,28 +24,32 @@ namespace EventSourcing.VehicleReadService
             .AddEnvironmentVariables()
             .Build();
 
-        public static async Task Main(string[] args) => await CreateHostBuilder(args).Build().RunAsync();
+        public static async Task Main(string[] args)
+        {
+            var host = CreateHostBuilder(args).Build();
+            var notificationService = host.Services.GetService<NotificationWriteService>();
+            await notificationService.StartExistingTimers();
+            await host.RunAsync();
+        }
 
         private static IWebHostBuilder CreateHostBuilder(string[] args) => WebHost.CreateDefaultBuilder(args)
-            .ConfigureKestrel(options => options.ListenAnyIP(Configuration.GetValue<int>("port"), o => o.Protocols = HttpProtocols.Http2))
+            .ConfigureKestrel(options =>
+                options.ListenAnyIP(Configuration.GetValue<int>("port"), o => o.Protocols = HttpProtocols.Http2)
+            )
             .ConfigureServices((hostContext, services) => services
-                .AddKsql($"http://{Configuration.GetValue<string>("ksql:host")}")
-                .AddSingleton<KsqlVehicleReadService>()
-                .AddSingleton<VehicleReadService>()
-                .AddKafkaConsumer<Vehicle>(new ConsumerConfig
+                .AddSingleton<NotificationWriteService>()
+                .AddKafkaProducer<string, Notification>(new ProducerConfig
                 {
                     BootstrapServers = Configuration.GetValue<string>("kafka:host"),
-                    GroupId = "VehicleRead",
-                    ClientId = Guid.NewGuid().ToString(),
-                    AutoOffsetReset = AutoOffsetReset.Earliest
+                    ClientId = Guid.NewGuid().ToString()
                 })
-                .AddRocksDb(Configuration.GetValue<string>("rocks:path"))
-                .AddSingleton(typeof(KafkaBackedDb<>))
+                .AddRocksDb("./notifications.db")
+                .AddRedisDataStore(Configuration.GetValue<string>("redis:host"))
                 .AddGrpc()
             )
             .Configure(builder => builder
                 .UseRouting()
-                .UseEndpoints(endpointBuilder => endpointBuilder.MapGrpcService<VehicleReadService>())
+                .UseEndpoints(endpointBuilder => endpointBuilder.MapGrpcService<NotificationWriteService>())
             );
     }
 }

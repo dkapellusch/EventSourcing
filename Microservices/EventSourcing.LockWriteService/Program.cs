@@ -26,7 +26,7 @@ namespace EventSourcing.LockWriteService
         public static async Task Main(string[] args) => await CreateHostBuilder(args).Build().RunAsync();
 
         private static IWebHostBuilder CreateHostBuilder(string[] args) => WebHost.CreateDefaultBuilder(args)
-            .ConfigureKestrel(options => options.ListenAnyIP(7000, o => o.Protocols = HttpProtocols.Http2))
+            .ConfigureKestrel(options => options.ListenAnyIP(Configuration.GetValue<int>("port"), o => o.Protocols = HttpProtocols.Http2))
             .ConfigureServices((hostContext, services) => services
                 .AddSingleton<LockWriteService>()
                 .AddKafkaProducer<string, Lock>(new ProducerConfig

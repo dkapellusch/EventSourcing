@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using System.Linq;
 using RocksDbSharp;
@@ -22,6 +23,12 @@ namespace EventSourcing.RocksDb.RocksAbstractions
                                 .SetWholeKeyFiltering(true)
                                 .SetIndexType(BlockBasedTableIndexType.Binary)));
             }
+
+            var options = Native.Instance.rocksdb_options_create();
+            Native.Instance.rocksdb_options_increase_parallelism(options, Environment.ProcessorCount);
+            Native.Instance.rocksdb_options_optimize_level_style_compaction(options, 0);
+            Native.Instance.rocksdb_options_set_create_if_missing(options, true);
+            Native.Instance.rocksdb_cache_create_lru(UIntPtr.Zero);
 
             return RocksDbSharp.RocksDb.Open(new DbOptions()
                     .SetCreateIfMissing()

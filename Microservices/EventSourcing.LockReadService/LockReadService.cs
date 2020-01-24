@@ -19,8 +19,7 @@ namespace EventSourcing.LockReadService
         {
             var currentLock = await _kafkaDb.Get(request.ResourceId);
 
-            if (currentLock.IsNullOrDefault() || currentLock.IsInactive())
-                currentLock = new Lock();
+            if (currentLock.IsNullOrDefault() || currentLock.IsInactive()) currentLock = new Lock();
 
             // Do not expose LockId so only the owner can release it.
             currentLock.LockId = string.Empty;

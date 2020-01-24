@@ -10,12 +10,12 @@ using Google.Protobuf;
 
 namespace EventSourcing.Kafka
 {
-    public sealed class KafkaConsumer<TPayload> : IDisposable where TPayload : IMessage<TPayload>, new()
+    public sealed class Consumer<TPayload> : IDisposable, IConsumer<TPayload> where TPayload : IMessage<TPayload>, new()
     {
         private readonly IConsumer<string, TPayload> _consumer;
         private readonly string _topicName;
 
-        public KafkaConsumer(ConsumerConfig config, IMessageSerializer<TPayload> serializer, string topicName = null)
+        public Consumer(ConsumerConfig config, IMessageSerializer<TPayload> serializer, string topicName = null)
         {
             _topicName = topicName ?? $"{typeof(TPayload).Name}s";
             _consumer = new ConsumerBuilder<string, TPayload>(config)

@@ -4,14 +4,13 @@ using System.Linq;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Threading.Tasks;
-using EventSourcing.Contracts.DataStore;
 using EventSourcing.Contracts.Extensions;
 using EventSourcing.Contracts.Serialization;
 using StackExchange.Redis;
 
 namespace EventSourcing.Redis
 {
-    public class RedisDataStore : IExpiringDataStore, IChangeTracking
+    public class RedisDataStore
     {
         private readonly IDatabaseAsync _database;
         private readonly ISubject<string> _expiredKeys = new Subject<string>();
@@ -42,8 +41,9 @@ namespace EventSourcing.Redis
                             var keyValue = await Get<T>(key);
                             if (keyValue.IsNotNullOrDefault()) changes.OnNext(keyValue);
                         }
-                        catch
+                        catch (Exception ex)
                         {
+                            Console.Error.WriteLine(ex);
                         }
                     }
                 );
