@@ -7,6 +7,7 @@ using EventSourcing.Contracts.DataStore;
 using EventSourcing.Contracts.Extensions;
 using EventSourcing.Kafka;
 using Microsoft.Extensions.Hosting;
+using Lock = EventSourcing.Contracts.Lock;
 
 namespace EventSourcing.LockWriteService
 {

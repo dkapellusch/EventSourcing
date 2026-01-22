@@ -2,18 +2,16 @@
 
     <PropertyGroup>
         <OutputType>Exe</OutputType>
-        <TargetFramework>netcoreapp3.0</TargetFramework>
+        <TargetFramework>net10.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="GraphQL" Version="2.4.0" />
-        <PackageReference Include="GraphQL.Server.Transports.AspNetCore" Version="3.4.0" />
-        <PackageReference Include="GraphQL.Server.Transports.WebSockets" Version="3.4.0" />
-        <PackageReference Include="GraphQL.Server.Ui.GraphiQL" Version="3.4.0" />
-        <PackageReference Include="GraphQL.Server.Ui.Playground" Version="3.4.0" />
-        <PackageReference Include="GraphQL.Server.Ui.Voyager" Version="3.4.0" />
+        <PackageReference Include="HotChocolate.AspNetCore" Version="14.2.0" />
+        <PackageReference Include="HotChocolate.Subscriptions.InMemory" Version="14.2.0" />
     </ItemGroup>
-    
+
     <ItemGroup>
         <Content Update="appsettings.json">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -27,11 +25,4 @@
       <ProjectReference Include="..\EventSourcing.Contracts\EventSourcing.Contracts.csproj" />
     </ItemGroup>
 
-    <ItemGroup>
-      <_ContentIncludedByDefault Remove="published\web.config" />
-      <_ContentIncludedByDefault Remove="published\appsettings.json" />
-      <_ContentIncludedByDefault Remove="published\appsettings.local.json" />
-      <_ContentIncludedByDefault Remove="published\EventSourcing.GraphqlGateway.deps.json" />
-      <_ContentIncludedByDefault Remove="published\EventSourcing.GraphqlGateway.runtimeconfig.json" />
-    </ItemGroup>
 </Project>
