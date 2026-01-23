@@ -1,0 +1,11 @@
+**/bin/
+**/obj/
+**/published/
+**/.git/
+**/.vs/
+**/.idea/
+**/node_modules/
+**/*.user
+**/*.suo
+**/Thumbs.db
+**/.DS_Store

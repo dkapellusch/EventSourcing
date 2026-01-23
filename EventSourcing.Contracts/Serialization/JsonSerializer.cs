@@ -1,5 +1,6 @@
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using Newtonsoft.Json;
 
 namespace EventSourcing.Contracts.Serialization
@@ -11,7 +12,7 @@ namespace EventSourcing.Contracts.Serialization
         public JsonSerializer() => _settings = new JsonSerializerOptions
         {
             ReadCommentHandling = JsonCommentHandling.Skip,
-            IgnoreNullValues = true,
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
             PropertyNameCaseInsensitive = true,
             AllowTrailingCommas = true,
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase
@@ -56,7 +57,7 @@ namespace EventSourcing.Contracts.Serialization
         public JsonSerializer() => _settings = new JsonSerializerOptions
         {
             ReadCommentHandling = JsonCommentHandling.Skip,
-            IgnoreNullValues = true,
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
             PropertyNameCaseInsensitive = true,
             AllowTrailingCommas = true,
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase

@@ -36,7 +36,7 @@ namespace EventSourcing.RocksDb.Extensions
             }
             catch
             {
-                var options = new DbOptions();
+                var options = new ColumnFamilyOptions();
 
                 rocksDb.RocksDb.CreateColumnFamily(options, columnFamilyName);
 

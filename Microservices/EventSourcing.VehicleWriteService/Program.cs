@@ -1,11 +1,11 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Threading.Tasks;
 using Confluent.Kafka;
 using EventSourcing.Contracts;
 using EventSourcing.Kafka;
 using FluentValidation;
-using Grpc.Core;
+using Grpc.Net.Client;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -36,7 +36,7 @@ namespace EventSourcing.VehicleWriteService
                     BootstrapServers = Configuration.GetValue<string>("kafka:host"),
                     ClientId = Guid.NewGuid().ToString()
                 })
-                .AddSingleton(new LocationRead.LocationReadClient(new Channel(Configuration.GetValue<string>("locationRead:host"), ChannelCredentials.Insecure)))
+                .AddSingleton(new LocationRead.LocationReadClient(GrpcChannel.ForAddress($"http://{Configuration.GetValue<string>("locationRead:host")}")))
                 .AddGrpc()
             )
             .Configure(builder => builder
