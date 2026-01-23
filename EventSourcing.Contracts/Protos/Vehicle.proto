@@ -21,11 +21,25 @@ message VehicleRequest {
     }
 }
 
+message LocationVehiclesRequest {
+    string LocationCode = 1;
+}
+
+message VehicleList {
+    repeated Vehicle Vehicles = 1;
+}
+
 service VehicleRead {
     rpc GetVehicle (VehicleRequest) returns (Vehicle) {
     }
 
     rpc GetVehicleUpdates (Empty) returns (stream Vehicle) {
+    }
+
+    rpc GetVehiclesAtLocation (LocationVehiclesRequest) returns (VehicleList) {
+    }
+
+    rpc GetVehicleUpdatesAtLocation (LocationVehiclesRequest) returns (stream Vehicle) {
     }
 }
 

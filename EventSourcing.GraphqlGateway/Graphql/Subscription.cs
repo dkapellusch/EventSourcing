@@ -18,4 +18,8 @@ public class Subscription
     [Subscribe]
     [Topic(nameof(OnLockExpireAsync))]
     public Contracts.Lock OnLockExpireAsync([EventMessage] Contracts.Lock lockExpired) => lockExpired;
+
+    [Subscribe]
+    [Topic($"{nameof(OnVehicleAtLocationChangeAsync)}_{{{nameof(locationCode)}}}")]
+    public Vehicle OnVehicleAtLocationChangeAsync(string locationCode, [EventMessage] Vehicle vehicle) => vehicle;
 }

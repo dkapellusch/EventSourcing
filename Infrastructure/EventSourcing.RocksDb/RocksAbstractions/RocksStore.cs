@@ -8,7 +8,7 @@ using EventSourcing.Contracts.Extensions;
 
 namespace EventSourcing.RocksDb.RocksAbstractions
 {
-    public class RocksStore : IChangeTrackingDataStore, IDataStore
+    public class RocksStore : IChangeTrackingDataStore, IDataStore, IQueryableDataStore
     {
         private readonly RockCollection _db;
 

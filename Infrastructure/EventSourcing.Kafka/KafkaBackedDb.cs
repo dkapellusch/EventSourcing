@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
@@ -9,7 +10,7 @@ using Google.Protobuf;
 
 namespace EventSourcing.Kafka
 {
-    public class KafkaBackedDb<TValue> : IChangeTracking<TValue>, IReadonlyDataStore<TValue> where TValue : IMessage<TValue>, new()
+    public class KafkaBackedDb<TValue> : IChangeTracking<TValue>, IReadonlyDataStore<TValue>, IQueryableDataStore<TValue> where TValue : IMessage<TValue>, new()
     {
         private readonly IChangeTrackingDataStore _dataStore;
 
@@ -42,5 +43,19 @@ namespace EventSourcing.Kafka
         public IObservable<TValue> GetChanges() => _dataStore.GetChanges<TValue>();
 
         public Task<TValue> Get(string key) => _dataStore.Get<TValue>(key);
+
+        public Task<IEnumerable<TValue>> Query()
+        {
+            if (_dataStore is IQueryableDataStore queryableStore)
+                return queryableStore.Query<TValue>();
+            throw new NotSupportedException("Query requires IQueryableDataStore backing");
+        }
+
+        public Task<IEnumerable<TValue>> Query(string startingKey)
+        {
+            if (_dataStore is IQueryableDataStore queryableStore)
+                return queryableStore.Query<TValue>(startingKey);
+            throw new NotSupportedException("Query requires IQueryableDataStore backing");
+        }
     }
 }

@@ -15,6 +15,7 @@ builder.Services
     .AddMutationType<Mutation>()
     .AddSubscriptionType<Subscription>()
     .AddTypeExtension<VehicleTypeExtension>()
+    .AddTypeExtension<LocationTypeExtension>()
     .AddInMemorySubscriptions()
     .ModifyRequestOptions(opt => opt.IncludeExceptionDetails = true)
     .AllowIntrospection(true);

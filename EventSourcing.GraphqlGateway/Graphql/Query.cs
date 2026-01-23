@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using EventSourcing.Contracts;
 using HotChocolate;
@@ -44,5 +45,11 @@ public class Query
         {
             return null;
         }
+    }
+
+    public async Task<IEnumerable<Vehicle>> GetVehiclesAtLocationAsync(string locationCode, [Service] VehicleReadClient client)
+    {
+        var result = await client.GetVehiclesAtLocationAsync(new LocationVehiclesRequest { LocationCode = locationCode });
+        return result.Vehicles;
     }
 }

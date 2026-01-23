@@ -1,60 +1,25 @@
 services:
-  zookeeper:
-    image: "confluentinc/cp-zookeeper:latest"
-    ports:
-      - "32181:32181"
-    environment:
-      ZOOKEEPER_CLIENT_PORT: 32181
-    restart: always
-    networks:
-      - "dd-net"
-
   kafka:
-    image: "confluentinc/cp-kafka:7.3.0"
+    image: "apache/kafka:3.7.0"
     ports:
       - "39092:39092"
+      - "39093:39093"
     environment:
-      KAFKA_ZOOKEEPER_CONNECT: "zookeeper:32181"
-      KAFKA_ADVERTISED_LISTENERS: "PLAINTEXT://kafka:39093,PLAINTEXT_HOST://localhost:39092"
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT"
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: "broker,controller"
+      KAFKA_CONTROLLER_QUORUM_VOTERS: "1@kafka:9093"
+      KAFKA_LISTENERS: "PLAINTEXT://:39093,CONTROLLER://:9093,EXTERNAL://:39092"
+      KAFKA_ADVERTISED_LISTENERS: "PLAINTEXT://kafka:39093,EXTERNAL://localhost:39092"
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,EXTERNAL:PLAINTEXT"
+      KAFKA_CONTROLLER_LISTENER_NAMES: "CONTROLLER"
+      KAFKA_INTER_BROKER_LISTENER_NAME: "PLAINTEXT"
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      KAFKA_BROKER_ID: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_HEAP_OPTS: "-Xmx512m -Xms256m"
+      CLUSTER_ID: "MkU3OEVBNTcwNTJENDM2Qk"
     restart: always
-    depends_on:
-      - "zookeeper"
-    networks:
-      - "dd-net"
-
-  ksql:
-    image: "confluentinc/ksqldb-server:latest"
-    ports:
-      - "8088:8088"
-      - "8089:8089"
-    environment:
-      KSQL_BOOTSTRAP_SERVERS: "kafka:39093"
-      KSQL_LISTENERS: "http://0.0.0.0:8088/,https://0.0.0.0:8089/"
-      KSQL_OPTS: "-Dksql.service.id=ksql_service_3_  -Dlisteners=http://0.0.0.0:8088/"
-    restart: always
-    depends_on:
-      - "kafka"
-    networks:
-      - "dd-net"
-
-  kafka2:
-    image: "confluentinc/cp-kafka:7.3.0"
-    ports:
-      - "49092:49092"
-    environment:
-      KAFKA_ZOOKEEPER_CONNECT: "zookeeper:32181"
-      KAFKA_ADVERTISED_LISTENERS: "PLAINTEXT://kafka2:39093,PLAINTEXT_HOST://localhost:49092"
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT"
-      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      KAFKA_BROKER_ID: 2
-    restart: always
-    depends_on:
-      - "zookeeper"
     networks:
       - "dd-net"
 
@@ -78,9 +43,7 @@ services:
       - "6001:6001"
     restart: always
     depends_on:
-      - "zookeeper"
       - "kafka"
-      - "kafka2"
     networks:
       - "dd-net"
 
@@ -93,9 +56,7 @@ services:
       - "6000:6000"
     restart: always
     depends_on:
-      - "zookeeper"
       - "kafka"
-      - "kafka2"
     networks:
       - "dd-net"
 
@@ -108,9 +69,7 @@ services:
       - "5001:5001"
     restart: always
     depends_on:
-      - "zookeeper"
       - "kafka"
-      - "kafka2"
     networks:
       - "dd-net"
 
@@ -123,9 +82,7 @@ services:
       - "5000:5000"
     restart: always
     depends_on:
-      - "zookeeper"
       - "kafka"
-      - "kafka2"
     networks:
       - "dd-net"
 
@@ -138,9 +95,7 @@ services:
       - "7001:7001"
     restart: always
     depends_on:
-      - "zookeeper"
       - "kafka"
-      - "kafka2"
       - "redis"
     networks:
       - "dd-net"
@@ -154,9 +109,7 @@ services:
       - "7000:7000"
     restart: always
     depends_on:
-      - "zookeeper"
       - "kafka"
-      - "kafka2"
       - "redis"
     networks:
       - "dd-net"

@@ -53,6 +53,12 @@ public class GrpcSubscriptionBridge : BackgroundService
                 await foreach (var vehicle in call.ResponseStream.ReadAllAsync(stoppingToken))
                 {
                     await _eventSender.SendAsync(nameof(Subscription.OnVehicleChangeAsync), vehicle, stoppingToken);
+
+                    if (!string.IsNullOrEmpty(vehicle.LocationCode))
+                    {
+                        var locationTopic = $"{nameof(Subscription.OnVehicleAtLocationChangeAsync)}_{vehicle.LocationCode}";
+                        await _eventSender.SendAsync(locationTopic, vehicle, stoppingToken);
+                    }
                 }
             }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
