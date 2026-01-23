@@ -1,5 +1,4 @@
 using System;
-using System.Reactive;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
 using EventSourcing.Contracts;
@@ -21,13 +20,7 @@ namespace EventSourcing.LocationReadService
                 .Concat()
                 .Do(Console.WriteLine);
 
-        public IObservable<Notification<Location>> GetLocationUpdates() =>
-            Observable.Empty<Location>()
-                .Do(Console.WriteLine)
-                .Select(r => _db.GetChanges())
-                .Concat()
-                .Materialize()
-                .Do(Console.WriteLine);
+        public IObservable<Location> GetLocationChanges() => _db.GetChanges();
     }
 
     public class LocationReadService : LocationRead.LocationReadBase
@@ -49,10 +42,6 @@ namespace EventSourcing.LocationReadService
         }
 
         public override async Task GetLocationUpdates(Empty request, IServerStreamWriter<Location> responseStream, ServerCallContext context) =>
-            await _locationRequestHandler.GetLocationUpdates().ForEachAsync(message => responseStream.WriteAsync(message.Value), context.CancellationToken);
-
-
-        // public override async Task GetLocationUpdates(Empty request, IServerStreamWriter<Location> responseStream, ServerCallContext context) =>
-        //     await _db.GetChanges().ForEachAsync(message => responseStream.WriteAsync(message), context.CancellationToken);
+            await _locationRequestHandler.GetLocationChanges().ForEachAsync(message => responseStream.WriteAsync(message), context.CancellationToken);
     }
 }
