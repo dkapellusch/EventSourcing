@@ -22,6 +22,9 @@ RUN dotnet publish Microservices/EventSourcing.LockReadService/EventSourcing.Loc
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app
+
+RUN apt-get update && apt-get install -y librocksdb-dev && rm -rf /var/lib/apt/lists/*
+
 COPY --from=build /app/publish .
 
 ENV ASPNETCORE_ENVIRONMENT=Production
