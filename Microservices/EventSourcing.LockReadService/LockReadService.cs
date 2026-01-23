@@ -4,31 +4,30 @@ using System.Reactive.Linq;
 using System.Threading.Tasks;
 using EventSourcing.Contracts;
 using EventSourcing.Contracts.Extensions;
-using EventSourcing.KSQL;
+using EventSourcing.Kafka;
 using Grpc.Core;
 
 namespace EventSourcing.LockReadService
 {
     public class LockReadService : LockRead.LockReadBase
     {
-        private readonly KsqlStore<Lock> _kafkaDb;
+        private readonly KafkaBackedDb<Lock> _db;
 
-        public LockReadService(KsqlStore<Lock> kafkaDb) => _kafkaDb = kafkaDb;
+        public LockReadService(KafkaBackedDb<Lock> db) => _db = db;
 
         public override async Task<Lock> GetLock(LockRequest request, ServerCallContext context)
         {
-            var currentLock = await _kafkaDb.Get(request.ResourceId);
+            var currentLock = await _db.Get(request.ResourceId);
 
             if (currentLock.IsNullOrDefault() || currentLock.IsInactive())
                 currentLock = new Lock();
 
-            // Do not expose LockId so only the owner can release it.
             currentLock.LockId = string.Empty;
             return currentLock;
         }
 
         public override Task ExpiringLocks(Empty request, IServerStreamWriter<Lock> responseStream, ServerCallContext context) =>
-            _kafkaDb.GetChanges()
+            _db.GetChanges()
                 .ObserveOn(TaskPoolScheduler.Default)
                 .Where(l => l.IsInactive())
                 .ForEachAsync(async l =>
