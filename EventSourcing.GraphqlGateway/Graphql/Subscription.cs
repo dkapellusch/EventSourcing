@@ -5,7 +5,6 @@ using Location = EventSourcing.Contracts.Location;
 
 namespace EventSourcing.GraphqlGateway.Graphql;
 
-[SubscriptionType]
 public class Subscription
 {
     [Subscribe]

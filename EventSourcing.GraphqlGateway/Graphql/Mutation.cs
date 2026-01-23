@@ -8,7 +8,6 @@ using Location = EventSourcing.Contracts.Location;
 
 namespace EventSourcing.GraphqlGateway.Graphql;
 
-[MutationType]
 public class Mutation
 {
     public async Task<MutationResult> AddOrUpdateVehicleAsync(

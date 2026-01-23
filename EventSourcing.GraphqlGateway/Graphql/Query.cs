@@ -8,7 +8,6 @@ using Location = EventSourcing.Contracts.Location;
 
 namespace EventSourcing.GraphqlGateway.Graphql;
 
-[QueryType]
 public class Query
 {
     public async Task<Vehicle?> GetVehicleAsync(string vin, [Service] VehicleReadClient client)
